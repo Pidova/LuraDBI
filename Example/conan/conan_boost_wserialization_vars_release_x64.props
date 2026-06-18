@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_wserializationRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_wserializationRootFolder>
+    <Conanboost_wserializationBinaryDirectories></Conanboost_wserializationBinaryDirectories>
+    <Conanboost_wserializationCompilerFlags></Conanboost_wserializationCompilerFlags>
+    <Conanboost_wserializationLinkerFlags></Conanboost_wserializationLinkerFlags>
+    <Conanboost_wserializationPreprocessorDefinitions></Conanboost_wserializationPreprocessorDefinitions>
+    <Conanboost_wserializationIncludeDirectories>$(Conanboost_wserializationRootFolder)/include;</Conanboost_wserializationIncludeDirectories>
+    <Conanboost_wserializationResourceDirectories></Conanboost_wserializationResourceDirectories>
+    <Conanboost_wserializationLibraryDirectories>$(Conanboost_wserializationRootFolder)/lib;</Conanboost_wserializationLibraryDirectories>
+    <Conanboost_wserializationLibraries>libboost_wserialization.lib;</Conanboost_wserializationLibraries>
+    <Conanboost_wserializationSystemLibs></Conanboost_wserializationSystemLibs>
+  </PropertyGroup>
+</Project>

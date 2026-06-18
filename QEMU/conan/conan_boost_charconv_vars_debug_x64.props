@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_charconvRootFolder>D:\.conan2\p\b\boost8cfab22c365ea\p</Conanboost_charconvRootFolder>
+    <Conanboost_charconvBinaryDirectories></Conanboost_charconvBinaryDirectories>
+    <Conanboost_charconvCompilerFlags></Conanboost_charconvCompilerFlags>
+    <Conanboost_charconvLinkerFlags></Conanboost_charconvLinkerFlags>
+    <Conanboost_charconvPreprocessorDefinitions></Conanboost_charconvPreprocessorDefinitions>
+    <Conanboost_charconvIncludeDirectories>$(Conanboost_charconvRootFolder)/include;</Conanboost_charconvIncludeDirectories>
+    <Conanboost_charconvResourceDirectories></Conanboost_charconvResourceDirectories>
+    <Conanboost_charconvLibraryDirectories>$(Conanboost_charconvRootFolder)/lib;</Conanboost_charconvLibraryDirectories>
+    <Conanboost_charconvLibraries>libboost_charconv.lib;</Conanboost_charconvLibraries>
+    <Conanboost_charconvSystemLibs></Conanboost_charconvSystemLibs>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_stacktrace_noopRootFolder>D:\.conan2\p\b\boost8cfab22c365ea\p</Conanboost_stacktrace_noopRootFolder>
+    <Conanboost_stacktrace_noopBinaryDirectories></Conanboost_stacktrace_noopBinaryDirectories>
+    <Conanboost_stacktrace_noopCompilerFlags></Conanboost_stacktrace_noopCompilerFlags>
+    <Conanboost_stacktrace_noopLinkerFlags></Conanboost_stacktrace_noopLinkerFlags>
+    <Conanboost_stacktrace_noopPreprocessorDefinitions>BOOST_STACKTRACE_USE_NOOP;</Conanboost_stacktrace_noopPreprocessorDefinitions>
+    <Conanboost_stacktrace_noopIncludeDirectories>$(Conanboost_stacktrace_noopRootFolder)/include;</Conanboost_stacktrace_noopIncludeDirectories>
+    <Conanboost_stacktrace_noopResourceDirectories></Conanboost_stacktrace_noopResourceDirectories>
+    <Conanboost_stacktrace_noopLibraryDirectories>$(Conanboost_stacktrace_noopRootFolder)/lib;</Conanboost_stacktrace_noopLibraryDirectories>
+    <Conanboost_stacktrace_noopLibraries>libboost_stacktrace_noop.lib;</Conanboost_stacktrace_noopLibraries>
+    <Conanboost_stacktrace_noopSystemLibs></Conanboost_stacktrace_noopSystemLibs>
+  </PropertyGroup>
+</Project>

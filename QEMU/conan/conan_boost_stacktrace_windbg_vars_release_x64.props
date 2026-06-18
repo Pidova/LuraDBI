@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_stacktrace_windbgRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_stacktrace_windbgRootFolder>
+    <Conanboost_stacktrace_windbgBinaryDirectories></Conanboost_stacktrace_windbgBinaryDirectories>
+    <Conanboost_stacktrace_windbgCompilerFlags></Conanboost_stacktrace_windbgCompilerFlags>
+    <Conanboost_stacktrace_windbgLinkerFlags></Conanboost_stacktrace_windbgLinkerFlags>
+    <Conanboost_stacktrace_windbgPreprocessorDefinitions>BOOST_STACKTRACE_USE_WINDBG;</Conanboost_stacktrace_windbgPreprocessorDefinitions>
+    <Conanboost_stacktrace_windbgIncludeDirectories>$(Conanboost_stacktrace_windbgRootFolder)/include;</Conanboost_stacktrace_windbgIncludeDirectories>
+    <Conanboost_stacktrace_windbgResourceDirectories></Conanboost_stacktrace_windbgResourceDirectories>
+    <Conanboost_stacktrace_windbgLibraryDirectories>$(Conanboost_stacktrace_windbgRootFolder)/lib;</Conanboost_stacktrace_windbgLibraryDirectories>
+    <Conanboost_stacktrace_windbgLibraries>libboost_stacktrace_windbg.lib;</Conanboost_stacktrace_windbgLibraries>
+    <Conanboost_stacktrace_windbgSystemLibs>ole32.lib;dbgeng.lib;</Conanboost_stacktrace_windbgSystemLibs>
+  </PropertyGroup>
+</Project>

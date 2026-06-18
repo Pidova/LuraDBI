@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanglib_gio-windows-2_0RootFolder>D:\.conan2\p\b\glibb9db45a14e962\p</Conanglib_gio-windows-2_0RootFolder>
+    <Conanglib_gio-windows-2_0BinaryDirectories></Conanglib_gio-windows-2_0BinaryDirectories>
+    <Conanglib_gio-windows-2_0CompilerFlags></Conanglib_gio-windows-2_0CompilerFlags>
+    <Conanglib_gio-windows-2_0LinkerFlags></Conanglib_gio-windows-2_0LinkerFlags>
+    <Conanglib_gio-windows-2_0PreprocessorDefinitions></Conanglib_gio-windows-2_0PreprocessorDefinitions>
+    <Conanglib_gio-windows-2_0IncludeDirectories>$(Conanglib_gio-windows-2_0RootFolder)/include\gio-win32-2.0;</Conanglib_gio-windows-2_0IncludeDirectories>
+    <Conanglib_gio-windows-2_0ResourceDirectories></Conanglib_gio-windows-2_0ResourceDirectories>
+    <Conanglib_gio-windows-2_0LibraryDirectories>$(Conanglib_gio-windows-2_0RootFolder)/lib;</Conanglib_gio-windows-2_0LibraryDirectories>
+    <Conanglib_gio-windows-2_0Libraries></Conanglib_gio-windows-2_0Libraries>
+    <Conanglib_gio-windows-2_0SystemLibs></Conanglib_gio-windows-2_0SystemLibs>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_cobaltRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_cobaltRootFolder>
+    <Conanboost_cobaltBinaryDirectories></Conanboost_cobaltBinaryDirectories>
+    <Conanboost_cobaltCompilerFlags></Conanboost_cobaltCompilerFlags>
+    <Conanboost_cobaltLinkerFlags></Conanboost_cobaltLinkerFlags>
+    <Conanboost_cobaltPreprocessorDefinitions></Conanboost_cobaltPreprocessorDefinitions>
+    <Conanboost_cobaltIncludeDirectories>$(Conanboost_cobaltRootFolder)/include;</Conanboost_cobaltIncludeDirectories>
+    <Conanboost_cobaltResourceDirectories></Conanboost_cobaltResourceDirectories>
+    <Conanboost_cobaltLibraryDirectories>$(Conanboost_cobaltRootFolder)/lib;</Conanboost_cobaltLibraryDirectories>
+    <Conanboost_cobaltLibraries>libboost_cobalt.lib;</Conanboost_cobaltLibraries>
+    <Conanboost_cobaltSystemLibs></Conanboost_cobaltSystemLibs>
+  </PropertyGroup>
+</Project>

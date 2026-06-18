@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_prg_exec_monitorRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_prg_exec_monitorRootFolder>
+    <Conanboost_prg_exec_monitorBinaryDirectories></Conanboost_prg_exec_monitorBinaryDirectories>
+    <Conanboost_prg_exec_monitorCompilerFlags></Conanboost_prg_exec_monitorCompilerFlags>
+    <Conanboost_prg_exec_monitorLinkerFlags></Conanboost_prg_exec_monitorLinkerFlags>
+    <Conanboost_prg_exec_monitorPreprocessorDefinitions></Conanboost_prg_exec_monitorPreprocessorDefinitions>
+    <Conanboost_prg_exec_monitorIncludeDirectories>$(Conanboost_prg_exec_monitorRootFolder)/include;</Conanboost_prg_exec_monitorIncludeDirectories>
+    <Conanboost_prg_exec_monitorResourceDirectories></Conanboost_prg_exec_monitorResourceDirectories>
+    <Conanboost_prg_exec_monitorLibraryDirectories>$(Conanboost_prg_exec_monitorRootFolder)/lib;</Conanboost_prg_exec_monitorLibraryDirectories>
+    <Conanboost_prg_exec_monitorLibraries>libboost_prg_exec_monitor.lib;</Conanboost_prg_exec_monitorLibraries>
+    <Conanboost_prg_exec_monitorSystemLibs></Conanboost_prg_exec_monitorSystemLibs>
+  </PropertyGroup>
+</Project>

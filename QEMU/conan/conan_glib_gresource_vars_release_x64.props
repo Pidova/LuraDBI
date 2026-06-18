@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanglib_gresourceRootFolder>D:\.conan2\p\glibcd8246d85e08a\p</Conanglib_gresourceRootFolder>
+    <Conanglib_gresourceBinaryDirectories></Conanglib_gresourceBinaryDirectories>
+    <Conanglib_gresourceCompilerFlags></Conanglib_gresourceCompilerFlags>
+    <Conanglib_gresourceLinkerFlags></Conanglib_gresourceLinkerFlags>
+    <Conanglib_gresourcePreprocessorDefinitions></Conanglib_gresourcePreprocessorDefinitions>
+    <Conanglib_gresourceIncludeDirectories>$(Conanglib_gresourceRootFolder)/include;</Conanglib_gresourceIncludeDirectories>
+    <Conanglib_gresourceResourceDirectories></Conanglib_gresourceResourceDirectories>
+    <Conanglib_gresourceLibraryDirectories>$(Conanglib_gresourceRootFolder)/lib;</Conanglib_gresourceLibraryDirectories>
+    <Conanglib_gresourceLibraries></Conanglib_gresourceLibraries>
+    <Conanglib_gresourceSystemLibs></Conanglib_gresourceSystemLibs>
+  </PropertyGroup>
+</Project>

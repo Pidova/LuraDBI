@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<ImportGroup Label="PropertySheets">
+		<Import Condition="'$(conan_capstone_props_imported)' != 'True'" Project="conan_capstone.props"/>
+		<Import Condition="'$(conan_boost_props_imported)' != 'True'" Project="conan_boost.props"/>
+		<Import Condition="'$(conan_lz4_props_imported)' != 'True'" Project="conan_lz4.props"/>
+	</ImportGroup>
+</Project>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_disable_autolinkingRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_disable_autolinkingRootFolder>
+    <Conanboost_disable_autolinkingBinaryDirectories></Conanboost_disable_autolinkingBinaryDirectories>
+    <Conanboost_disable_autolinkingCompilerFlags></Conanboost_disable_autolinkingCompilerFlags>
+    <Conanboost_disable_autolinkingLinkerFlags></Conanboost_disable_autolinkingLinkerFlags>
+    <Conanboost_disable_autolinkingPreprocessorDefinitions>BOOST_ALL_NO_LIB;</Conanboost_disable_autolinkingPreprocessorDefinitions>
+    <Conanboost_disable_autolinkingIncludeDirectories>$(Conanboost_disable_autolinkingRootFolder)/include;</Conanboost_disable_autolinkingIncludeDirectories>
+    <Conanboost_disable_autolinkingResourceDirectories></Conanboost_disable_autolinkingResourceDirectories>
+    <Conanboost_disable_autolinkingLibraryDirectories>$(Conanboost_disable_autolinkingRootFolder)/lib;</Conanboost_disable_autolinkingLibraryDirectories>
+    <Conanboost_disable_autolinkingLibraries></Conanboost_disable_autolinkingLibraries>
+    <Conanboost_disable_autolinkingSystemLibs></Conanboost_disable_autolinkingSystemLibs>
+  </PropertyGroup>
+</Project>

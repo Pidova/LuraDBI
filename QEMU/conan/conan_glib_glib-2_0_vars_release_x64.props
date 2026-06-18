@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanglib_glib-2_0RootFolder>D:\.conan2\p\glibcd8246d85e08a\p</Conanglib_glib-2_0RootFolder>
+    <Conanglib_glib-2_0BinaryDirectories></Conanglib_glib-2_0BinaryDirectories>
+    <Conanglib_glib-2_0CompilerFlags></Conanglib_glib-2_0CompilerFlags>
+    <Conanglib_glib-2_0LinkerFlags></Conanglib_glib-2_0LinkerFlags>
+    <Conanglib_glib-2_0PreprocessorDefinitions></Conanglib_glib-2_0PreprocessorDefinitions>
+    <Conanglib_glib-2_0IncludeDirectories>$(Conanglib_glib-2_0RootFolder)/include;$(Conanglib_glib-2_0RootFolder)/include\glib-2.0;$(Conanglib_glib-2_0RootFolder)/lib\glib-2.0\include;</Conanglib_glib-2_0IncludeDirectories>
+    <Conanglib_glib-2_0ResourceDirectories>$(Conanglib_glib-2_0RootFolder)/res;</Conanglib_glib-2_0ResourceDirectories>
+    <Conanglib_glib-2_0LibraryDirectories>$(Conanglib_glib-2_0RootFolder)/lib;</Conanglib_glib-2_0LibraryDirectories>
+    <Conanglib_glib-2_0Libraries>glib-2.0.lib;</Conanglib_glib-2_0Libraries>
+    <Conanglib_glib-2_0SystemLibs>ws2_32.lib;ole32.lib;shell32.lib;user32.lib;advapi32.lib;</Conanglib_glib-2_0SystemLibs>
+  </PropertyGroup>
+</Project>

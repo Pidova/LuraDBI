@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_chronoRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_chronoRootFolder>
+    <Conanboost_chronoBinaryDirectories></Conanboost_chronoBinaryDirectories>
+    <Conanboost_chronoCompilerFlags></Conanboost_chronoCompilerFlags>
+    <Conanboost_chronoLinkerFlags></Conanboost_chronoLinkerFlags>
+    <Conanboost_chronoPreprocessorDefinitions></Conanboost_chronoPreprocessorDefinitions>
+    <Conanboost_chronoIncludeDirectories>$(Conanboost_chronoRootFolder)/include;</Conanboost_chronoIncludeDirectories>
+    <Conanboost_chronoResourceDirectories></Conanboost_chronoResourceDirectories>
+    <Conanboost_chronoLibraryDirectories>$(Conanboost_chronoRootFolder)/lib;</Conanboost_chronoLibraryDirectories>
+    <Conanboost_chronoLibraries>libboost_chrono.lib;</Conanboost_chronoLibraries>
+    <Conanboost_chronoSystemLibs></Conanboost_chronoSystemLibs>
+  </PropertyGroup>
+</Project>

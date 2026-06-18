@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<ImportGroup Label="PropertySheets">
+		<Import Condition="'$(conan_boost_headers_props_imported)' != 'True'" Project="conan_boost_headers.props"/>
+		<Import Condition="'$(conan_boost__boost_cmake_props_imported)' != 'True'" Project="conan_boost__boost_cmake.props"/>
+		<Import Condition="'$(conan_boost__libboost_props_imported)' != 'True'" Project="conan_boost__libboost.props"/>
+		<Import Condition="'$(conan_boost_diagnostic_definitions_props_imported)' != 'True'" Project="conan_boost_diagnostic_definitions.props"/>
+		<Import Condition="'$(conan_boost_disable_autolinking_props_imported)' != 'True'" Project="conan_boost_disable_autolinking.props"/>
+		<Import Condition="'$(conan_boost_dynamic_linking_props_imported)' != 'True'" Project="conan_boost_dynamic_linking.props"/>
+		<Import Condition="'$(conan_boost_atomic_props_imported)' != 'True'" Project="conan_boost_atomic.props"/>
+		<Import Condition="'$(conan_boost_charconv_props_imported)' != 'True'" Project="conan_boost_charconv.props"/>
+		<Import Condition="'$(conan_boost_chrono_props_imported)' != 'True'" Project="conan_boost_chrono.props"/>
+		<Import Condition="'$(conan_boost_cobalt_props_imported)' != 'True'" Project="conan_boost_cobalt.props"/>
+		<Import Condition="'$(conan_boost_container_props_imported)' != 'True'" Project="conan_boost_container.props"/>
+		<Import Condition="'$(conan_boost_context_props_imported)' != 'True'" Project="conan_boost_context.props"/>
+		<Import Condition="'$(conan_boost_contract_props_imported)' != 'True'" Project="conan_boost_contract.props"/>
+		<Import Condition="'$(conan_boost_coroutine_props_imported)' != 'True'" Project="conan_boost_coroutine.props"/>
+		<Import Condition="'$(conan_boost_date_time_props_imported)' != 'True'" Project="conan_boost_date_time.props"/>
+		<Import Condition="'$(conan_boost_exception_props_imported)' != 'True'" Project="conan_boost_exception.props"/>
+		<Import Condition="'$(conan_boost_filesystem_props_imported)' != 'True'" Project="conan_boost_filesystem.props"/>
+		<Import Condition="'$(conan_boost_graph_props_imported)' != 'True'" Project="conan_boost_graph.props"/>
+		<Import Condition="'$(conan_boost_iostreams_props_imported)' != 'True'" Project="conan_boost_iostreams.props"/>
+		<Import Condition="'$(conan_boost_json_props_imported)' != 'True'" Project="conan_boost_json.props"/>
+		<Import Condition="'$(conan_boost_locale_props_imported)' != 'True'" Project="conan_boost_locale.props"/>
+		<Import Condition="'$(conan_boost_log_props_imported)' != 'True'" Project="conan_boost_log.props"/>
+		<Import Condition="'$(conan_boost_log_setup_props_imported)' != 'True'" Project="conan_boost_log_setup.props"/>
+		<Import Condition="'$(conan_boost_math_props_imported)' != 'True'" Project="conan_boost_math.props"/>
+		<Import Condition="'$(conan_boost_math_c99_props_imported)' != 'True'" Project="conan_boost_math_c99.props"/>
+		<Import Condition="'$(conan_boost_math_c99f_props_imported)' != 'True'" Project="conan_boost_math_c99f.props"/>
+		<Import Condition="'$(conan_boost_math_c99l_props_imported)' != 'True'" Project="conan_boost_math_c99l.props"/>
+		<Import Condition="'$(conan_boost_math_tr1_props_imported)' != 'True'" Project="conan_boost_math_tr1.props"/>
+		<Import Condition="'$(conan_boost_math_tr1f_props_imported)' != 'True'" Project="conan_boost_math_tr1f.props"/>
+		<Import Condition="'$(conan_boost_math_tr1l_props_imported)' != 'True'" Project="conan_boost_math_tr1l.props"/>
+		<Import Condition="'$(conan_boost_nowide_props_imported)' != 'True'" Project="conan_boost_nowide.props"/>
+		<Import Condition="'$(conan_boost_prg_exec_monitor_props_imported)' != 'True'" Project="conan_boost_prg_exec_monitor.props"/>
+		<Import Condition="'$(conan_boost_process_props_imported)' != 'True'" Project="conan_boost_process.props"/>
+		<Import Condition="'$(conan_boost_program_options_props_imported)' != 'True'" Project="conan_boost_program_options.props"/>
+		<Import Condition="'$(conan_boost_random_props_imported)' != 'True'" Project="conan_boost_random.props"/>
+		<Import Condition="'$(conan_boost_regex_props_imported)' != 'True'" Project="conan_boost_regex.props"/>
+		<Import Condition="'$(conan_boost_serialization_props_imported)' != 'True'" Project="conan_boost_serialization.props"/>
+		<Import Condition="'$(conan_boost_stacktrace_props_imported)' != 'True'" Project="conan_boost_stacktrace.props"/>
+		<Import Condition="'$(conan_boost_stacktrace_from_exception_props_imported)' != 'True'" Project="conan_boost_stacktrace_from_exception.props"/>
+		<Import Condition="'$(conan_boost_stacktrace_noop_props_imported)' != 'True'" Project="conan_boost_stacktrace_noop.props"/>
+		<Import Condition="'$(conan_boost_stacktrace_windbg_props_imported)' != 'True'" Project="conan_boost_stacktrace_windbg.props"/>
+		<Import Condition="'$(conan_boost_stacktrace_windbg_cached_props_imported)' != 'True'" Project="conan_boost_stacktrace_windbg_cached.props"/>
+		<Import Condition="'$(conan_boost_system_props_imported)' != 'True'" Project="conan_boost_system.props"/>
+		<Import Condition="'$(conan_boost_test_props_imported)' != 'True'" Project="conan_boost_test.props"/>
+		<Import Condition="'$(conan_boost_test_exec_monitor_props_imported)' != 'True'" Project="conan_boost_test_exec_monitor.props"/>
+		<Import Condition="'$(conan_boost_thread_props_imported)' != 'True'" Project="conan_boost_thread.props"/>
+		<Import Condition="'$(conan_boost_timer_props_imported)' != 'True'" Project="conan_boost_timer.props"/>
+		<Import Condition="'$(conan_boost_type_erasure_props_imported)' != 'True'" Project="conan_boost_type_erasure.props"/>
+		<Import Condition="'$(conan_boost_unit_test_framework_props_imported)' != 'True'" Project="conan_boost_unit_test_framework.props"/>
+		<Import Condition="'$(conan_boost_url_props_imported)' != 'True'" Project="conan_boost_url.props"/>
+		<Import Condition="'$(conan_boost_wave_props_imported)' != 'True'" Project="conan_boost_wave.props"/>
+		<Import Condition="'$(conan_boost_wserialization_props_imported)' != 'True'" Project="conan_boost_wserialization.props"/>
+	</ImportGroup>
+	<PropertyGroup>
+		<conan_boost_props_imported>True</conan_boost_props_imported>
+	</PropertyGroup>
+</Project>

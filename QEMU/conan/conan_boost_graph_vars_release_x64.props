@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_graphRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_graphRootFolder>
+    <Conanboost_graphBinaryDirectories></Conanboost_graphBinaryDirectories>
+    <Conanboost_graphCompilerFlags></Conanboost_graphCompilerFlags>
+    <Conanboost_graphLinkerFlags></Conanboost_graphLinkerFlags>
+    <Conanboost_graphPreprocessorDefinitions></Conanboost_graphPreprocessorDefinitions>
+    <Conanboost_graphIncludeDirectories>$(Conanboost_graphRootFolder)/include;</Conanboost_graphIncludeDirectories>
+    <Conanboost_graphResourceDirectories></Conanboost_graphResourceDirectories>
+    <Conanboost_graphLibraryDirectories>$(Conanboost_graphRootFolder)/lib;</Conanboost_graphLibraryDirectories>
+    <Conanboost_graphLibraries>libboost_graph.lib;</Conanboost_graphLibraries>
+    <Conanboost_graphSystemLibs></Conanboost_graphSystemLibs>
+  </PropertyGroup>
+</Project>

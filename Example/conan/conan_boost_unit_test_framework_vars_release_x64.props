@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_unit_test_frameworkRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_unit_test_frameworkRootFolder>
+    <Conanboost_unit_test_frameworkBinaryDirectories></Conanboost_unit_test_frameworkBinaryDirectories>
+    <Conanboost_unit_test_frameworkCompilerFlags></Conanboost_unit_test_frameworkCompilerFlags>
+    <Conanboost_unit_test_frameworkLinkerFlags></Conanboost_unit_test_frameworkLinkerFlags>
+    <Conanboost_unit_test_frameworkPreprocessorDefinitions></Conanboost_unit_test_frameworkPreprocessorDefinitions>
+    <Conanboost_unit_test_frameworkIncludeDirectories>$(Conanboost_unit_test_frameworkRootFolder)/include;</Conanboost_unit_test_frameworkIncludeDirectories>
+    <Conanboost_unit_test_frameworkResourceDirectories></Conanboost_unit_test_frameworkResourceDirectories>
+    <Conanboost_unit_test_frameworkLibraryDirectories>$(Conanboost_unit_test_frameworkRootFolder)/lib;</Conanboost_unit_test_frameworkLibraryDirectories>
+    <Conanboost_unit_test_frameworkLibraries>libboost_unit_test_framework.lib;</Conanboost_unit_test_frameworkLibraries>
+    <Conanboost_unit_test_frameworkSystemLibs></Conanboost_unit_test_frameworkSystemLibs>
+  </PropertyGroup>
+</Project>

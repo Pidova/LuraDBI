@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_coroutineRootFolder>D:\.conan2\p\b\boost8cfab22c365ea\p</Conanboost_coroutineRootFolder>
+    <Conanboost_coroutineBinaryDirectories></Conanboost_coroutineBinaryDirectories>
+    <Conanboost_coroutineCompilerFlags></Conanboost_coroutineCompilerFlags>
+    <Conanboost_coroutineLinkerFlags></Conanboost_coroutineLinkerFlags>
+    <Conanboost_coroutinePreprocessorDefinitions></Conanboost_coroutinePreprocessorDefinitions>
+    <Conanboost_coroutineIncludeDirectories>$(Conanboost_coroutineRootFolder)/include;</Conanboost_coroutineIncludeDirectories>
+    <Conanboost_coroutineResourceDirectories></Conanboost_coroutineResourceDirectories>
+    <Conanboost_coroutineLibraryDirectories>$(Conanboost_coroutineRootFolder)/lib;</Conanboost_coroutineLibraryDirectories>
+    <Conanboost_coroutineLibraries>libboost_coroutine.lib;</Conanboost_coroutineLibraries>
+    <Conanboost_coroutineSystemLibs></Conanboost_coroutineSystemLibs>
+  </PropertyGroup>
+</Project>

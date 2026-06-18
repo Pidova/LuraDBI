@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_math_tr1lRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_math_tr1lRootFolder>
+    <Conanboost_math_tr1lBinaryDirectories></Conanboost_math_tr1lBinaryDirectories>
+    <Conanboost_math_tr1lCompilerFlags></Conanboost_math_tr1lCompilerFlags>
+    <Conanboost_math_tr1lLinkerFlags></Conanboost_math_tr1lLinkerFlags>
+    <Conanboost_math_tr1lPreprocessorDefinitions></Conanboost_math_tr1lPreprocessorDefinitions>
+    <Conanboost_math_tr1lIncludeDirectories>$(Conanboost_math_tr1lRootFolder)/include;</Conanboost_math_tr1lIncludeDirectories>
+    <Conanboost_math_tr1lResourceDirectories></Conanboost_math_tr1lResourceDirectories>
+    <Conanboost_math_tr1lLibraryDirectories>$(Conanboost_math_tr1lRootFolder)/lib;</Conanboost_math_tr1lLibraryDirectories>
+    <Conanboost_math_tr1lLibraries>libboost_math_tr1l.lib;</Conanboost_math_tr1lLibraries>
+    <Conanboost_math_tr1lSystemLibs></Conanboost_math_tr1lSystemLibs>
+  </PropertyGroup>
+</Project>

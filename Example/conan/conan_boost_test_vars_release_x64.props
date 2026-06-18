@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_testRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_testRootFolder>
+    <Conanboost_testBinaryDirectories></Conanboost_testBinaryDirectories>
+    <Conanboost_testCompilerFlags></Conanboost_testCompilerFlags>
+    <Conanboost_testLinkerFlags></Conanboost_testLinkerFlags>
+    <Conanboost_testPreprocessorDefinitions></Conanboost_testPreprocessorDefinitions>
+    <Conanboost_testIncludeDirectories>$(Conanboost_testRootFolder)/include;</Conanboost_testIncludeDirectories>
+    <Conanboost_testResourceDirectories></Conanboost_testResourceDirectories>
+    <Conanboost_testLibraryDirectories>$(Conanboost_testRootFolder)/lib;</Conanboost_testLibraryDirectories>
+    <Conanboost_testLibraries></Conanboost_testLibraries>
+    <Conanboost_testSystemLibs></Conanboost_testSystemLibs>
+  </PropertyGroup>
+</Project>

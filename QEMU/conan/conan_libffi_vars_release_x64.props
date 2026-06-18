@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <ConanlibffiRootFolder>D:\.conan2\p\libff4d41809ad9844\p</ConanlibffiRootFolder>
+    <ConanlibffiBinaryDirectories></ConanlibffiBinaryDirectories>
+    <ConanlibffiCompilerFlags></ConanlibffiCompilerFlags>
+    <ConanlibffiLinkerFlags></ConanlibffiLinkerFlags>
+    <ConanlibffiPreprocessorDefinitions>FFI_BUILDING;</ConanlibffiPreprocessorDefinitions>
+    <ConanlibffiIncludeDirectories></ConanlibffiIncludeDirectories>
+    <ConanlibffiResourceDirectories></ConanlibffiResourceDirectories>
+    <ConanlibffiLibraryDirectories>$(ConanlibffiRootFolder)/lib;</ConanlibffiLibraryDirectories>
+    <ConanlibffiLibraries>libffi.lib;</ConanlibffiLibraries>
+    <ConanlibffiSystemLibs></ConanlibffiSystemLibs>
+  </PropertyGroup>
+</Project>

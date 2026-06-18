@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_stacktrace_from_exceptionRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_stacktrace_from_exceptionRootFolder>
+    <Conanboost_stacktrace_from_exceptionBinaryDirectories></Conanboost_stacktrace_from_exceptionBinaryDirectories>
+    <Conanboost_stacktrace_from_exceptionCompilerFlags></Conanboost_stacktrace_from_exceptionCompilerFlags>
+    <Conanboost_stacktrace_from_exceptionLinkerFlags></Conanboost_stacktrace_from_exceptionLinkerFlags>
+    <Conanboost_stacktrace_from_exceptionPreprocessorDefinitions></Conanboost_stacktrace_from_exceptionPreprocessorDefinitions>
+    <Conanboost_stacktrace_from_exceptionIncludeDirectories>$(Conanboost_stacktrace_from_exceptionRootFolder)/include;</Conanboost_stacktrace_from_exceptionIncludeDirectories>
+    <Conanboost_stacktrace_from_exceptionResourceDirectories></Conanboost_stacktrace_from_exceptionResourceDirectories>
+    <Conanboost_stacktrace_from_exceptionLibraryDirectories>$(Conanboost_stacktrace_from_exceptionRootFolder)/lib;</Conanboost_stacktrace_from_exceptionLibraryDirectories>
+    <Conanboost_stacktrace_from_exceptionLibraries>libboost_stacktrace_from_exception.lib;</Conanboost_stacktrace_from_exceptionLibraries>
+    <Conanboost_stacktrace_from_exceptionSystemLibs></Conanboost_stacktrace_from_exceptionSystemLibs>
+  </PropertyGroup>
+</Project>

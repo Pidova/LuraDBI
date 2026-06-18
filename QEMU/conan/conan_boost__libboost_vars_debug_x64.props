@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost__libboostRootFolder>D:\.conan2\p\b\boost8cfab22c365ea\p</Conanboost__libboostRootFolder>
+    <Conanboost__libboostBinaryDirectories></Conanboost__libboostBinaryDirectories>
+    <Conanboost__libboostCompilerFlags></Conanboost__libboostCompilerFlags>
+    <Conanboost__libboostLinkerFlags></Conanboost__libboostLinkerFlags>
+    <Conanboost__libboostPreprocessorDefinitions></Conanboost__libboostPreprocessorDefinitions>
+    <Conanboost__libboostIncludeDirectories>$(Conanboost__libboostRootFolder)/include;</Conanboost__libboostIncludeDirectories>
+    <Conanboost__libboostResourceDirectories></Conanboost__libboostResourceDirectories>
+    <Conanboost__libboostLibraryDirectories>$(Conanboost__libboostRootFolder)/lib;</Conanboost__libboostLibraryDirectories>
+    <Conanboost__libboostLibraries></Conanboost__libboostLibraries>
+    <Conanboost__libboostSystemLibs>bcrypt.lib;</Conanboost__libboostSystemLibs>
+  </PropertyGroup>
+</Project>

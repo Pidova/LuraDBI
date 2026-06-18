@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_contractRootFolder>D:\.conan2\p\b\boost8cfab22c365ea\p</Conanboost_contractRootFolder>
+    <Conanboost_contractBinaryDirectories></Conanboost_contractBinaryDirectories>
+    <Conanboost_contractCompilerFlags></Conanboost_contractCompilerFlags>
+    <Conanboost_contractLinkerFlags></Conanboost_contractLinkerFlags>
+    <Conanboost_contractPreprocessorDefinitions></Conanboost_contractPreprocessorDefinitions>
+    <Conanboost_contractIncludeDirectories>$(Conanboost_contractRootFolder)/include;</Conanboost_contractIncludeDirectories>
+    <Conanboost_contractResourceDirectories></Conanboost_contractResourceDirectories>
+    <Conanboost_contractLibraryDirectories>$(Conanboost_contractRootFolder)/lib;</Conanboost_contractLibraryDirectories>
+    <Conanboost_contractLibraries>libboost_contract.lib;</Conanboost_contractLibraries>
+    <Conanboost_contractSystemLibs></Conanboost_contractSystemLibs>
+  </PropertyGroup>
+</Project>

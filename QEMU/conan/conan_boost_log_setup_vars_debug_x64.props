@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_log_setupRootFolder>D:\.conan2\p\b\boost8cfab22c365ea\p</Conanboost_log_setupRootFolder>
+    <Conanboost_log_setupBinaryDirectories></Conanboost_log_setupBinaryDirectories>
+    <Conanboost_log_setupCompilerFlags></Conanboost_log_setupCompilerFlags>
+    <Conanboost_log_setupLinkerFlags></Conanboost_log_setupLinkerFlags>
+    <Conanboost_log_setupPreprocessorDefinitions></Conanboost_log_setupPreprocessorDefinitions>
+    <Conanboost_log_setupIncludeDirectories>$(Conanboost_log_setupRootFolder)/include;</Conanboost_log_setupIncludeDirectories>
+    <Conanboost_log_setupResourceDirectories></Conanboost_log_setupResourceDirectories>
+    <Conanboost_log_setupLibraryDirectories>$(Conanboost_log_setupRootFolder)/lib;</Conanboost_log_setupLibraryDirectories>
+    <Conanboost_log_setupLibraries>libboost_log_setup.lib;</Conanboost_log_setupLibraries>
+    <Conanboost_log_setupSystemLibs></Conanboost_log_setupSystemLibs>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_waveRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_waveRootFolder>
+    <Conanboost_waveBinaryDirectories></Conanboost_waveBinaryDirectories>
+    <Conanboost_waveCompilerFlags></Conanboost_waveCompilerFlags>
+    <Conanboost_waveLinkerFlags></Conanboost_waveLinkerFlags>
+    <Conanboost_wavePreprocessorDefinitions></Conanboost_wavePreprocessorDefinitions>
+    <Conanboost_waveIncludeDirectories>$(Conanboost_waveRootFolder)/include;</Conanboost_waveIncludeDirectories>
+    <Conanboost_waveResourceDirectories></Conanboost_waveResourceDirectories>
+    <Conanboost_waveLibraryDirectories>$(Conanboost_waveRootFolder)/lib;</Conanboost_waveLibraryDirectories>
+    <Conanboost_waveLibraries>libboost_wave.lib;</Conanboost_waveLibraries>
+    <Conanboost_waveSystemLibs></Conanboost_waveSystemLibs>
+  </PropertyGroup>
+</Project>

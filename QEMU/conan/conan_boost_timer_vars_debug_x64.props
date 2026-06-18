@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_timerRootFolder>D:\.conan2\p\b\boost8cfab22c365ea\p</Conanboost_timerRootFolder>
+    <Conanboost_timerBinaryDirectories></Conanboost_timerBinaryDirectories>
+    <Conanboost_timerCompilerFlags></Conanboost_timerCompilerFlags>
+    <Conanboost_timerLinkerFlags></Conanboost_timerLinkerFlags>
+    <Conanboost_timerPreprocessorDefinitions></Conanboost_timerPreprocessorDefinitions>
+    <Conanboost_timerIncludeDirectories>$(Conanboost_timerRootFolder)/include;</Conanboost_timerIncludeDirectories>
+    <Conanboost_timerResourceDirectories></Conanboost_timerResourceDirectories>
+    <Conanboost_timerLibraryDirectories>$(Conanboost_timerRootFolder)/lib;</Conanboost_timerLibraryDirectories>
+    <Conanboost_timerLibraries>libboost_timer.lib;</Conanboost_timerLibraries>
+    <Conanboost_timerSystemLibs></Conanboost_timerSystemLibs>
+  </PropertyGroup>
+</Project>

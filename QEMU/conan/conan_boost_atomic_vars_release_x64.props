@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanboost_atomicRootFolder>D:\.conan2\p\b\boost5ca2fcd2c5155\p</Conanboost_atomicRootFolder>
+    <Conanboost_atomicBinaryDirectories></Conanboost_atomicBinaryDirectories>
+    <Conanboost_atomicCompilerFlags></Conanboost_atomicCompilerFlags>
+    <Conanboost_atomicLinkerFlags></Conanboost_atomicLinkerFlags>
+    <Conanboost_atomicPreprocessorDefinitions></Conanboost_atomicPreprocessorDefinitions>
+    <Conanboost_atomicIncludeDirectories>$(Conanboost_atomicRootFolder)/include;</Conanboost_atomicIncludeDirectories>
+    <Conanboost_atomicResourceDirectories></Conanboost_atomicResourceDirectories>
+    <Conanboost_atomicLibraryDirectories>$(Conanboost_atomicRootFolder)/lib;</Conanboost_atomicLibraryDirectories>
+    <Conanboost_atomicLibraries>libboost_atomic.lib;</Conanboost_atomicLibraries>
+    <Conanboost_atomicSystemLibs></Conanboost_atomicSystemLibs>
+  </PropertyGroup>
+</Project>
