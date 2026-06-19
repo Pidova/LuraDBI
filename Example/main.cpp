@@ -1,3 +1,4 @@
+#include "../config.hpp"
 #include "../shared/fast_groups.hpp"
 #include "../shared/luramas/basic_info.hpp"
 #include "../shared/luramas/blocks.hpp"
@@ -10,20 +11,21 @@
 #include <filesystem>
 #include <fstream>
 
-using block = std::shared_ptr<luramas::blocks::block<15u>>;
+using block = std::shared_ptr<luramas::blocks::block<config::MAX_LEN>>;
 using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, block>;
 
-void export_graphviz(const Graph &g, const std::string &file, std::unordered_map<luramas::profile::address, std::string> &nodes) {
-      std::ofstream out(file);
+/* Export graphviz to file while using nodes as label strings. */
+void export_graphviz(const Graph &g, const std::string &file, const std::unordered_map<luramas::profile::address, std::string> &nodes) {
 
-      auto vertex_writer = [&g, &nodes](std::ostream &os, const Graph::vertex_descriptor &vd) {
+      std::ofstream out(file);
+      const auto vertex_writer = [&](std::ostream &os, const Graph::vertex_descriptor &vd) {
             const auto &block_ptr = g[vd];
 
             os << "[label=\"";
             if (block_ptr && !block_ptr->insts.empty()) {
-                  auto addr = block_ptr->insts.front().inst.real_pc;
 
-                  if (auto it = nodes.find(addr); it != nodes.end()) {
+                  const auto addr = block_ptr->insts.front().inst.real_pc;
+                  if (const auto it = nodes.find(addr); it != nodes.end()) {
                         os << it->second;
                   } else {
                         os << "Block @ 0x" << std::hex << addr;
@@ -33,8 +35,7 @@ void export_graphviz(const Graph &g, const std::string &file, std::unordered_map
             }
             os << "\"]";
       };
-
-      boost::write_graphviz( out,  g,  vertex_writer, boost::default_writer() );
+      boost::write_graphviz(out, g, vertex_writer, boost::default_writer());
       return;
 }
 #include <windows.h>
@@ -61,13 +62,15 @@ void copyToClipboard(const std::string &text) {
 /* Analyze block flags */
 void init_flags(const boost::unordered_flat_map<luramas::profile::address, boost::unordered_flat_set<luramas::profile::address>> &emap, const boost::unordered_flat_map<luramas::profile::address, block> &bmap, boost::unordered_flat_map<luramas::blocks::interpretation_mode, std::pair<csh, cs_insn *>> &capmap) {
 
-      /* Exited */
+      /* Misc flags */
       for (auto &[addr, b] : bmap) {
 
             if (b->insts.empty()) {
                   continue;
             }
             auto &finst = b->insts.front();
+
+            /* Entry */
             {
                   luramas::blocks::flags::finsts finsts(finst.flags);
                   finsts.fentry = !finst.inst.vcpu && !finst.inst.real_pc;
@@ -76,6 +79,8 @@ void init_flags(const boost::unordered_flat_map<luramas::profile::address, boost
             if (!valid) {
                   continue;
             }
+
+            /* Misc Execution flags */
             for (auto &i : b->insts) {
                   luramas::blocks::flags::finsts finsts(i.flags);
                   finsts.fexecuted = i.valid.load();
@@ -98,8 +103,9 @@ void init_flags(const boost::unordered_flat_map<luramas::profile::address, boost
                         break;
                   }
 
-                  /* Branching with Arch */
                   luramas::blocks::flags::finsts finsts(i.flags);
+
+                  /* Flag branching data with targeted architecture */
                   switch (luramas::blocks::interp_mode_to_arch(b->interpretation_id)) {
                         case luramas::blocks::arch::x86: {
 
@@ -118,20 +124,23 @@ void init_flags(const boost::unordered_flat_map<luramas::profile::address, boost
                   }
 
                   /* See if conditional branch was taken by seeing if next instruction is not in one of the edges */
-                  if (finsts.fconditional_jump) {
+                  const auto it = emap.find(i.inst.real_pc);
+                  if (it == emap.end()) {
+                        continue;
+                  }
+                  const auto &binst = b->insts.back();
+                  for (const auto &rdest : it->second) {
 
-                        const auto it = emap.find(i.inst.real_pc);
-                        if (it == emap.end()) {
+                        const auto bit = bmap.find(rdest);
+                        if (bit == bmap.end() || bit->second->insts.empty()) {
                               continue;
                         }
-                        const auto &binst = b->insts.back();
-                        for (const auto &rdest : it->second) {
-
-                              const auto bit = bmap.find(rdest);
-                              if (bit == bmap.end() || bit->second->insts.empty()) {
-                                    continue;
-                              }
-                              finsts.ftaken_condbranch = binst.inst.bytes.size() + binst.inst.pc != bit->second->loc;
+                        const auto taken = binst.inst.bytes.size() + binst.inst.pc != bit->second->loc;
+                        if (finsts.fbranching) {
+                              finsts.fother_branch_edge = taken;
+                        }
+                        if (finsts.fconditional_jump) {
+                              finsts.ftaken_condbranch = taken;
                         }
                   }
             }
@@ -222,7 +231,10 @@ std::int32_t main() {
             if (b->insts.empty()) {
                   continue;
             }
-            for (const auto &i : {b->insts.front(), b->insts.back()}) {
+            for (const auto &i : {b->insts.front()}) {
+                  if (!block_map.contains(i.inst.prev_real_pc)) {
+                        continue;
+                  }
                   labels[i.inst.real_pc] = "LABEL_" + std::to_string(i.inst.real_pc);
                   edge_map[i.inst.prev_real_pc].insert(i.inst.real_pc);
                   redge_map[i.inst.real_pc].insert(i.inst.prev_real_pc);
@@ -244,23 +256,29 @@ std::int32_t main() {
 
                   luramas::blocks::flags::finsts finsts;
                   finsts.unpack(i.flags);
+
+                  /* Dissassemble */
                   const auto *tmp_ptr = i.inst.bytes.data();
                   std::size_t ts = i.inst.bytes.size();
                   std::uint64_t ta = i.inst.pc;
                   auto &[capstone_handle, insn] = capmap[b->interpretation_id];
                   if (cs_disasm_iter(capstone_handle, &tmp_ptr, &ts, &ta, insn)) {
 
+                        /* Flag self modified */
                         auto &str = nodes[addr];
                         if (finsts.fself_modified) {
                               str += "[V]";
                         }
+
+                        /* Compile */
                         str += "  " + std::string(insn->mnemonic) + " ";
 
+                        /* Add reference stack edges */
                         if (idx + 1u >= b->insts.size()) {
 
-                              bool changed = false;
-                              bool has_refs = false;
-                              std::string refs("; { ");
+                              std::string refs("; { ");                /* Compiled references */
+                              luramas::blocks::flag fhas_refs = false; /* Have references to multiple unique edges? */
+                              luramas::blocks::flag fchanged = false;  /* Label appended to the start of the string? */
                               if (const auto &it = edge_map.find(i.inst.real_pc); it != edge_map.end() && it->second.size()) {
 
                                     for (const auto &dest : it->second) {
@@ -275,27 +293,27 @@ std::int32_t main() {
                                                 continue;
                                           }
                                           if (i.inst.bytes.size() + i.inst.pc != bit->second->loc) {
-                                                if (!changed && finsts.fref) {
+                                                if (!fchanged && finsts.fref) {
                                                       str += lit->second + " ";
-                                                      changed = true;
+                                                      fchanged = true;
                                                       references_labels.insert(label_addr);
                                                 } else {
-                                                      has_refs = true;
+                                                      fhas_refs = true;
                                                       refs += lit->second + " ";
                                                       references_labels.insert(label_addr);
                                                 }
                                           } else if (!finsts.fref) {
-                                                has_refs = true;
+                                                fhas_refs = true;
                                                 refs += lit->second + " ";
                                                 references_labels.insert(label_addr);
                                           }
                                     }
                                     refs += "}";
                               }
-                              if (!changed) {
+                              if (!fchanged) {
                                     str += std::string(insn->op_str);
                               }
-                              if (has_refs) {
+                              if (fhas_refs) {
                                     str += refs;
                               }
                         } else {
@@ -309,8 +327,8 @@ std::int32_t main() {
       /* Compile */
       std::ostringstream result;
 
-      /* Entry */
-      std::optional<luramas::profile::address> entry_address = std::nullopt;
+      /* Find entry block  */
+      std::optional<luramas::profile::address> entry_address = std::nullopt; /* Entry address */
       for (const auto &[addr, b] : block_map) {
             luramas::blocks::flags::finsts f;
             if (!b->insts.empty()) {
@@ -321,10 +339,12 @@ std::int32_t main() {
                   break;
             }
       }
+
+      /* Start at entry then procedurely compile based on control flow schemantics */
       if (entry_address) {
 
-            boost::container::vector<luramas::profile::address> addr_stack = {*entry_address};
-            boost::unordered_flat_set<luramas::profile::address> visited;
+            boost::container::vector<luramas::profile::address> addr_stack = {*entry_address}; /* Address stack */
+            boost::unordered_flat_set<luramas::profile::address> visited;                      /* Already visited blocks */
             do {
 
                   /* See if address already analyzed */
@@ -352,6 +372,8 @@ std::int32_t main() {
                   if (const auto edgmapit = edge_map.find(binst.inst.real_pc); edgmapit != edge_map.end()) {
 
                         std::optional<luramas::profile::address> next_addr = std::nullopt;
+
+                        /* Add each edge to the stack */
                         for (const auto &dest : edgmapit->second) {
 
                               addr_stack.emplace_back(dest);
@@ -363,6 +385,8 @@ std::int32_t main() {
                                     next_addr = dest;
                               }
                         }
+
+                        /* Overwrite next address to be analyzed with the one that comes after it in the CFG */
                         if (next_addr) {
                               addr_stack.emplace_back(*next_addr);
                         }

@@ -9,9 +9,11 @@ namespace luramas::blocks {
       using flag = bool;
       using flag_storage = std::uint32_t;
       enum class save_type : std::uint8_t {
-            none,    /* Nothing*/
-            block,   /* Block */
-            edge_map /* Edges */
+            none,       /* Nothing*/
+            block,      /* Block */
+            edge_map,   /* Edges */
+            vcpu_states, /* VCPU states */
+            interrupts /* Interrupt data */
       };
       enum class arch : std::uint8_t {
             none, /* No arch */
@@ -152,6 +154,129 @@ namespace luramas::blocks {
                   return true;
             }
       } // namespace edges
+      
+      namespace interrupts {
+
+            enum class type : std::uint8_t {
+                  EXCEPTION, /* Normal exception */
+                  INTERUPT, /* Normal interupt */
+                  ETC   /* Misc interupt */
+            };
+            struct interrupt {
+                  type k = type::EXCEPTION;              /* Type of interrupt */
+                  luramas::profile::address dst = 0u;    /* Destination Vaddr PC */
+                  luramas::profile::address src = 0u;    /* Source Vaddr PC */
+                  std::size_t curr_global_block_id = 0u; /* Current global block ID to map to the instruction where it came from  */
+                  std::uint8_t vcpu = 0u;                /* VCPU */
+            };
+            /* Read/Write functions */
+            inline void read(std::ifstream &ifs, interrupt &in) {
+                  ifs.read(reinterpret_cast<char *>(&in.k), sizeof(in.k));
+                  ifs.read(reinterpret_cast<char *>(&in.dst), sizeof(in.dst));
+                  ifs.read(reinterpret_cast<char *>(&in.src), sizeof(in.src));
+                  ifs.read(reinterpret_cast<char *>(&in.curr_global_block_id), sizeof(in.curr_global_block_id));
+                  ifs.read(reinterpret_cast<char *>(&in.vcpu), sizeof(in.vcpu));
+                  return;
+            }
+            inline bool read(std::ifstream &ifs, boost::container::vector<interrupt> &v) {
+
+                  if (!ifs.is_open()) {
+                        return false;
+                  }
+                  if (const auto pos = ifs.tellg(); fs::get_save_type(ifs) != save_type::interrupts) {
+                        ifs.seekg(pos);
+                        return false;
+                  }
+                  std::size_t size = 0u;
+                  ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
+                  v.resize(size);
+                  for (auto i = 0u; i < size; ++i) {
+                        read(ifs, v[i]);
+                  }
+                  return true;
+            }
+            inline void write(std::ofstream &ofs, const interrupt &in) {
+                  ofs.write(reinterpret_cast<const char *>(&in.k), sizeof(in.k));
+                  ofs.write(reinterpret_cast<const char *>(&in.dst), sizeof(in.dst));
+                  ofs.write(reinterpret_cast<const char *>(&in.src), sizeof(in.src));
+                  ofs.write(reinterpret_cast<const char *>(&in.curr_global_block_id), sizeof(in.curr_global_block_id));
+                  ofs.write(reinterpret_cast<const char *>(&in.vcpu), sizeof(in.vcpu));
+                  return;
+            }
+            inline void write(std::ofstream &ofs, const boost::container::vector<interrupt> &v) {
+
+                  if (!ofs.is_open() || v.empty()) {
+                        return;
+                  }
+                  const auto type = save_type::interrupts;
+                  ofs.write(reinterpret_cast<const char *>(&type), sizeof(type));
+                  const std::size_t size = v.size();
+                  ofs.write(reinterpret_cast<const char *>(&size), sizeof(size));
+                  for (const auto &i : v) {
+                        write(ofs, i);
+                  }
+                  return;
+            }
+      } // namespace vcpu
+
+      namespace vcpu {
+
+            /* When a VCPU changes state it will capture the state of all active other vcpus */
+            enum class state : std::uint8_t {
+                  PAUSED,
+                  RESUME
+            };
+            struct captured_block_state {
+                  state k = state::PAUSED;         /* State put in */
+                  std::uint8_t vcpu = 0u;          /* Related VCPU */
+                  std::size_t block_id = 0u;       /* Current Block ID */
+            };
+            /* Read/Write functions */
+            inline void read(std::ifstream &ifs, captured_block_state &s) {
+                  ifs.read(reinterpret_cast<char *>(&s.k), sizeof(s.k));
+                  ifs.read(reinterpret_cast<char *>(&s.vcpu), sizeof(s.vcpu));
+                  ifs.read(reinterpret_cast<char *>(&s.block_id), sizeof(s.block_id));
+                  return;
+            }
+            inline bool read(std::ifstream &ifs, boost::container::vector<captured_block_state> &s) {
+
+                  if (!ifs.is_open()) {
+                        return false;
+                  }
+                  const auto pos = ifs.tellg();
+                  if (fs::get_save_type(ifs) != save_type::vcpu_states) {
+                        ifs.seekg(pos);
+                        return false;
+                  }
+                  std::size_t size = 0u;
+                  ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
+                  s.resize(size);
+                  for (auto i = 0u; i < size; ++i) {
+                        read(ifs, s[i]);
+                  }
+                  return true;
+            }
+            inline void write(std::ofstream &ofs, const captured_block_state &s) {
+                  ofs.write(reinterpret_cast<const char *>(&s.k), sizeof(s.k));
+                  ofs.write(reinterpret_cast<const char *>(&s.vcpu), sizeof(s.vcpu));
+                  ofs.write(reinterpret_cast<const char *>(&s.block_id), sizeof(s.block_id));
+                  return;
+            }
+            inline void write(std::ofstream &ofs, const boost::container::vector<captured_block_state> &s) {
+
+                  if (!ofs.is_open() || s.empty()) {
+                        return;
+                  }
+                  const auto type = save_type::vcpu_states;
+                  ofs.write(reinterpret_cast<const char *>(&type), sizeof(type));
+                  const std::size_t size = s.size();
+                  ofs.write(reinterpret_cast<const char *>(&size), sizeof(size));
+                  for (auto i = 0u; i < size; ++i) {
+                        write(ofs, s[i]);
+                  }
+                  return;
+            }
+      } // namespace vcpu
 
       template <std::uint8_t MAX_LEN>
       struct inst_data {
@@ -182,9 +307,10 @@ namespace luramas::blocks {
       struct block {
 
             time_t time = NULL;                                                /* Time Block was translated */
+            std::size_t id = 0u;                                               /* Block ID relative to other blocs */
             flag fretranslated = false;                                        /* Has block been retranslated? */
             boost::container::vector<inst_data<MAX_LEN>> insts;                /* Instruction data translated on tb exec */
-            luramas::profile::address loc = 0u;                                /* Start pc of bytes */
+            luramas::profile::address loc = 0u;                                /* Start virtual pc  */
             std::size_t inst_count = 0u;                                       /* Instruction count in block */
             interpretation_mode interpretation_id = interpretation_mode::none; /* What is it get interpreted as? */
             std::uint8_t vcpu_n = 0u;                                          /* Count of vcpus */
@@ -198,28 +324,7 @@ namespace luramas::blocks {
                   return this->inst_count - 1u;
             }
 
-            /* Write */
-            inline void write(std::ofstream &ofs) const {
-                  if (!ofs.is_open()) {
-                        return;
-                  }
-                  auto type = save_type::block;
-                  ofs.write(reinterpret_cast<const char *>(&type), sizeof(type));
-                  ofs.write(reinterpret_cast<const char *>(&this->time), sizeof(this->time));
-                  ofs.write(reinterpret_cast<const char *>(&this->fretranslated), sizeof(this->fretranslated));
-                  ofs.write(reinterpret_cast<const char *>(&this->loc), sizeof(this->loc));
-                  ofs.write(reinterpret_cast<const char *>(&this->inst_count), sizeof(this->inst_count));
-                  ofs.write(reinterpret_cast<const char *>(&this->interpretation_id), sizeof(this->interpretation_id));
-                  ofs.write(reinterpret_cast<const char *>(&this->vcpu_n), sizeof(this->vcpu_n));
-                  const auto vector_size = static_cast<std::size_t>(this->insts.size());
-                  ofs.write(reinterpret_cast<const char *>(&vector_size), sizeof(vector_size));
-                  for (const auto &i : this->insts) {
-                        ofs.write(reinterpret_cast<const char *>(&i.flags), sizeof(i.flags));
-                        ofs.write(reinterpret_cast<const char *>(&i.valid), sizeof(i.valid));
-                        i.inst.write(ofs);
-                  }
-                  return;
-            }
+            /* Read/Write functions */
             inline bool read(std::ifstream &ifs) {
                   if (!ifs.is_open()) {
                         return false;
@@ -229,6 +334,7 @@ namespace luramas::blocks {
                         return false;
                   }
                   ifs.read(reinterpret_cast<char *>(&this->time), sizeof(this->time));
+                  ifs.read(reinterpret_cast<char *>(&this->id), sizeof(this->id));
                   ifs.read(reinterpret_cast<char *>(&this->fretranslated), sizeof(this->fretranslated));
                   ifs.read(reinterpret_cast<char *>(&this->loc), sizeof(this->loc));
                   ifs.read(reinterpret_cast<char *>(&this->inst_count), sizeof(this->inst_count));
@@ -245,5 +351,28 @@ namespace luramas::blocks {
                   }
                   return true;
             }
+            inline void write(std::ofstream &ofs) const {
+                  if (!ofs.is_open()) {
+                        return;
+                  }
+                  auto type = save_type::block;
+                  ofs.write(reinterpret_cast<const char *>(&type), sizeof(type));
+                  ofs.write(reinterpret_cast<const char *>(&this->time), sizeof(this->time));
+                  ofs.write(reinterpret_cast<const char *>(&this->id), sizeof(this->id));
+                  ofs.write(reinterpret_cast<const char *>(&this->fretranslated), sizeof(this->fretranslated));
+                  ofs.write(reinterpret_cast<const char *>(&this->loc), sizeof(this->loc));
+                  ofs.write(reinterpret_cast<const char *>(&this->inst_count), sizeof(this->inst_count));
+                  ofs.write(reinterpret_cast<const char *>(&this->interpretation_id), sizeof(this->interpretation_id));
+                  ofs.write(reinterpret_cast<const char *>(&this->vcpu_n), sizeof(this->vcpu_n));
+                  const auto vector_size = static_cast<std::size_t>(this->insts.size());
+                  ofs.write(reinterpret_cast<const char *>(&vector_size), sizeof(vector_size));
+                  for (const auto &i : this->insts) {
+                        ofs.write(reinterpret_cast<const char *>(&i.flags), sizeof(i.flags));
+                        ofs.write(reinterpret_cast<const char *>(&i.valid), sizeof(i.valid));
+                        i.inst.write(ofs);
+                  }
+                  return;
+            }
       };
+
 } // namespace luramas::blocks

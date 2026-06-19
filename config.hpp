@@ -14,7 +14,7 @@ namespace config {
 	  /* Directory to save edge and block data */
       static constexpr auto directory = "C:\\qemudumps\\blocks\\";
 	  
-	  /* Save name of block data */
+	  /* Save name of misc data */
       static constexpr auto mainsave_name = "save";
 	  
 	  /* Save name of edge data */
