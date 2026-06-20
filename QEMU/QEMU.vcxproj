@@ -139,6 +139,10 @@ set CONAN_BUILD_CONFIG="$(Configuration)_$(Platform)" &amp;&amp; "$(ProjectDir).
       <AdditionalIncludeDirectories>$(WindowsSDK_IncludePath);$(VC_IncludePath);$(QEMU_INCLUDE_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <CallingConvention>FastCall</CallingConvention>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -13,8 +13,8 @@ namespace luramas::basic_info {
       template <std::uint8_t MAX_LEN>
       struct inst {
 
-            address pc = 0u; /* Virtual pc */
-            address real_pc = 0u; /* Logical pc */
+            address pc = 0u;           /* Virtual pc */
+            address real_pc = 0u;      /* Logical pc */
             address prev_real_pc = 0u; /* Previous logical PC */
             std::uint8_t vcpu = 0u;    /* Virtual CPU it got executed on */
             inst_bytes<MAX_LEN> bytes;

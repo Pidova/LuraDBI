@@ -14,7 +14,7 @@ namespace boost {
             inline constexpr fixed_vector(std::initializer_list<T> init_list)
                 : msize(init_list.size()) {
 
-                  if (init_list.size() > N) {
+                  if (init_list.size() > N) [[unlikely]] {
                         throw std::out_of_range("Initializer list exceeds maximum size");
                   }
                   NT i = 0u;
@@ -37,14 +37,14 @@ namespace boost {
                   return !this->size();
             }
             inline constexpr auto push_back(const T &value) {
-                  if (this->msize >= N) {
+                  if (this->msize >= N) [[unlikely]] {
                         throw std::out_of_range("Overflow");
                   }
                   this->mdata[this->msize++] = value;
                   return;
             }
             inline constexpr auto push_back(T &&value) {
-                  if (this->msize >= N) {
+                  if (this->msize >= N) [[unlikely]] {
                         throw std::out_of_range("Overflow");
                   }
                   this->mdata[this->msize++] = std::move(value);
@@ -52,7 +52,7 @@ namespace boost {
             }
             template <typename... Args>
             inline constexpr void emplace_back(Args &&...args) {
-                  if (this->msize >= N) {
+                  if (this->msize >= N) [[unlikely]] {
                         throw std::out_of_range("Overflow");
                   }
                   new (&this->mdata[this->msize]) T(std::forward<Args>(args)...);
@@ -60,20 +60,20 @@ namespace boost {
                   return;
             }
             inline constexpr auto pop_back() {
-                  if (!this->msize) {
+                  if (!this->msize) [[unlikely]] {
                         throw std::out_of_range("Underflow");
                   }
                   --this->msize;
                   return;
             }
             inline constexpr T &at(const NT idx) {
-                  if (idx >= this->msize) {
+                  if (idx >= this->msize) [[unlikely]] {
                         throw std::out_of_range("Index out of range");
                   }
                   return this->mdata[idx];
             }
             inline constexpr const T &at(const NT idx) const {
-                  if (idx >= msize) {
+                  if (idx >= msize) [[unlikely]] {
                         throw std::out_of_range("Index out of range");
                   }
                   return this->mdata[idx];

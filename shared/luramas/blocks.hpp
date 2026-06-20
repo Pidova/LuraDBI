@@ -9,11 +9,11 @@ namespace luramas::blocks {
       using flag = bool;
       using flag_storage = std::uint32_t;
       enum class save_type : std::uint8_t {
-            none,       /* Nothing*/
-            block,      /* Block */
-            edge_map,   /* Edges */
+            none,        /* Nothing*/
+            block,       /* Block */
+            edge_map,    /* Edges */
             vcpu_states, /* VCPU states */
-            interrupts /* Interrupt data */
+            interrupts   /* Interrupt data */
       };
       enum class arch : std::uint8_t {
             none, /* No arch */
@@ -154,13 +154,13 @@ namespace luramas::blocks {
                   return true;
             }
       } // namespace edges
-      
+
       namespace interrupts {
 
             enum class type : std::uint8_t {
                   EXCEPTION, /* Normal exception */
-                  INTERUPT, /* Normal interupt */
-                  ETC   /* Misc interupt */
+                  INTERUPT,  /* Normal interupt */
+                  ETC        /* Misc interupt */
             };
             struct interrupt {
                   type k = type::EXCEPTION;              /* Type of interrupt */
@@ -217,7 +217,7 @@ namespace luramas::blocks {
                   }
                   return;
             }
-      } // namespace vcpu
+      } // namespace interrupts
 
       namespace vcpu {
 
@@ -227,9 +227,9 @@ namespace luramas::blocks {
                   RESUME
             };
             struct captured_block_state {
-                  state k = state::PAUSED;         /* State put in */
-                  std::uint8_t vcpu = 0u;          /* Related VCPU */
-                  std::size_t block_id = 0u;       /* Current Block ID */
+                  state k = state::PAUSED;   /* State put in */
+                  std::uint8_t vcpu = 0u;    /* Related VCPU */
+                  std::size_t block_id = 0u; /* Current Block ID */
             };
             /* Read/Write functions */
             inline void read(std::ifstream &ifs, captured_block_state &s) {
@@ -283,24 +283,7 @@ namespace luramas::blocks {
 
             flag_storage flags = 0u;                 /* Flags to disassemble with inst_data_flags */
             luramas::basic_info::inst<MAX_LEN> inst; /* Instruction data */
-            std::atomic<flag> valid{false};          /* See if instruction has been executed? */
-
-            inst_data()
-                : inst(), valid(false) {
-            }
-            inst_data(const inst_data &other)
-                : inst(other.inst), valid(other.valid.load(std::memory_order_relaxed)) {
-            }
-            inst_data(inst_data &&other) noexcept
-                : inst(std::move(other.inst)), valid(other.valid.load(std::memory_order_relaxed)) {
-            }
-            inst_data &operator=(const inst_data &other) {
-                  if (this != &other) {
-                        this->inst = other.inst;
-                        this->valid.store(other.valid.load(std::memory_order_relaxed), std::memory_order_relaxed);
-                  }
-                  return *this;
-            }
+            flag valid = false;                      /* See if instruction has been executed? */
       };
 
       template <std::uint8_t MAX_LEN>

@@ -9,8 +9,18 @@ MSDOS:
 Windows 10:
     cd /d C:\qemu_imgs
     qemu-img create -f qcow2 win10.qcow2 80G
-    qemu-system-x86_64.exe -m 16G -boot d -cdrom "C:\vm\windows\windows.iso" -drive file="win10.qcow2",format=qcow2 -vga qxl -smp 16 -plugin "C:\projects\LuraDBI\x64\Release\QEMU.dll"
-
+    qemu-system-x86_64.exe ^
+  -m 16G ^
+  -smp 16 ^
+  -accel tcg,thread=multi,tb-size=4096 ^
+  -boot d ^
+  -cdrom "C:\vm\windows\windows.iso" ^
+  -drive file="C:\vm\windows\virtio-win.iso",media=cdrom,id=virtio_drivers ^
+  -drive file=win10.qcow2,if=none,id=hd0,format=qcow2,cache=unsafe,aio=threads ^
+  -device ide-hd,drive=hd0 ^
+  -vga none ^
+  -device virtio-vga ^
+  -plugin "C:\projects\LuraDBI\x64\Release\QEMU.dll"
 To invoke quit:
     CTRL + ALT + 2
     stop
@@ -37,6 +47,7 @@ To invoke quit:
 #include <shared_mutex>
 #include <windows.h>
 #include <winsock2.h>
+#define QEMU_PLUGIN_DELAY_CBS 1
 
 /* Profile globals and defintions */
 namespace lurapro {
@@ -52,7 +63,9 @@ namespace lurapro {
       using edge_hash = luramas::blocks::edges::jmp_loc_hash;   /* Edge hashing */
 
       /* Data */
-      HMODULE mod;                          /* Module for Windows */
+#ifdef _WIN32
+      HMODULE mod;                          /* Module for Windows support */
+#endif
       std::shared_mutex *tbmutex = nullptr; /* When a block gets translated or saved this is active. */
 
       /* VCPU ID reqs */
@@ -60,6 +73,9 @@ namespace lurapro {
       vcpu_vec<luramas::profile::address> *real_pc = nullptr;                               /* Real PC with VCPU IDX */
       vcpu_vec<boost::fixed_vector<edge, config::MAX_BUFFER_EDGES>> *prevd_jumps = nullptr; /* Given next instruction if prev inst is set and diff logs it here */
       vcpu_vec<boost::unordered_flat_set<edge, edge_hash>> *prevd_jumps_set = nullptr;      /* Jmp locs */
+#ifdef QEMU_PLUGIN_DELAY_CBS
+      std::atomic<bool> start_cbs{false}; /* Start CBs at a later time */
+#endif
 
       namespace capstone_handles {
 
@@ -75,6 +91,8 @@ namespace lurapro {
 
             std::ofstream *save = nullptr;                    /* Saves inst data */
             vcpu_vec<std::ofstream> *save_jmp_locs = nullptr; /* Save jmp loc data */
+            boost::asio::thread_pool *pool = nullptr;         /* Thread pool for background saves */
+            std::mutex io_mutex;                              /* Mutex for FS */
       } // namespace save
 
       namespace translation {
@@ -98,41 +116,52 @@ namespace lurapro {
       /* Init/Destroy all global pointers */
       inline void init() {
 
-            if (!lurapro::tbmutex) {
-                  lurapro::tbmutex = new std::shared_mutex();
+            {
+                  if (!lurapro::tbmutex) {
+                        lurapro::tbmutex = new std::shared_mutex();
+                  }
+                  if (!lurapro::curr_pc) {
+                        lurapro::curr_pc = new vcpu_vec<luramas::profile::address>();
+                  }
+                  if (!lurapro::real_pc) {
+                        lurapro::real_pc = new vcpu_vec<luramas::profile::address>();
+                  }
+                  if (!lurapro::prevd_jumps) {
+                        lurapro::prevd_jumps = new vcpu_vec<boost::fixed_vector<edge, config::MAX_BUFFER_EDGES>>();
+                  }
+                  if (!lurapro::prevd_jumps_set) {
+                        lurapro::prevd_jumps_set = new vcpu_vec<boost::unordered_flat_set<edge, edge_hash>>();
+                  }
             }
-            if (!lurapro::curr_pc) {
-                  lurapro::curr_pc = new vcpu_vec<luramas::profile::address>();
+            {
+                  if (!vcpu::vcpu_states) {
+                        vcpu::vcpu_states = new vcpu_vec<boost::container::vector<luramas::blocks::vcpu::captured_block_state>>();
+                  }
+                  if (!interrupts::ints) {
+                        interrupts::ints = new vcpu_vec<boost::container::vector<luramas::blocks::interrupts::interrupt>>();
+                  }
             }
-            if (!lurapro::real_pc) {
-                  lurapro::real_pc = new vcpu_vec<luramas::profile::address>();
+            {
+                  if (!translation::logged_ranges) {
+                        translation::logged_ranges = new boost::icl::interval_set<luramas::profile::address>();
+                  }
+                  if (!translation::blocks) {
+                        translation::blocks = new boost::unordered_flat_map<luramas::profile::address, boost::shared_ptr<block>>();
+                  }
+                  if (!translation::block_graveyard) {
+                        translation::block_graveyard = new vcpu_vec<boost::shared_ptr<block>>();
+                  }
             }
-            if (!lurapro::prevd_jumps) {
-                  lurapro::prevd_jumps = new vcpu_vec<boost::fixed_vector<edge, config::MAX_BUFFER_EDGES>>();
-            }
-            if (!lurapro::prevd_jumps_set) {
-                  lurapro::prevd_jumps_set = new vcpu_vec<boost::unordered_flat_set<edge, edge_hash>>();
-            }
-            if (!vcpu::vcpu_states) {
-                  vcpu::vcpu_states = new vcpu_vec<boost::container::vector<luramas::blocks::vcpu::captured_block_state>>();
-            }
-            if (!interrupts::ints) {
-                  interrupts::ints = new vcpu_vec<boost::container::vector<luramas::blocks::interrupts::interrupt>>();
-            }
-            if (!translation::logged_ranges) {
-                  translation::logged_ranges = new boost::icl::interval_set<luramas::profile::address>();
-            }
-            if (!translation::blocks) {
-                  translation::blocks = new boost::unordered_flat_map<luramas::profile::address, boost::shared_ptr<block>>();
-            }
-            if (!translation::block_graveyard) {
-                  translation::block_graveyard = new vcpu_vec<boost::shared_ptr<block>>();
-            }
-            if (!save::save) {
-                  save::save = new std::ofstream(std::string(config::directory) + config::mainsave_name + config::extension, std::ios::binary);
-            }
-            if (!save::save_jmp_locs) {
-                  save::save_jmp_locs = new vcpu_vec<std::ofstream>();
+            {
+                  if (!save::save) {
+                        save::save = new std::ofstream(std::string(config::directory) + config::mainsave_name + config::extension, std::ios::binary);
+                  }
+                  if (!save::save_jmp_locs) {
+                        save::save_jmp_locs = new vcpu_vec<std::ofstream>();
+                  }
+                  if (!save::pool) {
+                        save::pool = new boost::asio::thread_pool(1u);
+                  }
             }
             return;
       }
@@ -157,6 +186,11 @@ namespace lurapro {
                         delete save::save_jmp_locs;
                         save::save_jmp_locs = nullptr;
                   }
+                  if (save::pool) {
+                        save::pool->join();
+                        delete save::pool;
+                        save::pool = nullptr;
+                  }
             }
             {
                   if (vcpu::vcpu_states) {
@@ -176,6 +210,11 @@ namespace lurapro {
                         delete translation::logged_ranges;
                         translation::logged_ranges = nullptr;
                   }
+                  if (translation::block_graveyard) {
+                        translation::block_graveyard->clear();
+                        delete translation::block_graveyard;
+                        translation::block_graveyard = nullptr;
+                  }
             }
             {
                   if (interrupts::ints) {
@@ -184,28 +223,25 @@ namespace lurapro {
                         interrupts::ints = nullptr;
                   }
             }
-            if (prevd_jumps_set) {
-                  prevd_jumps_set->clear();
-                  delete prevd_jumps_set;
-                  prevd_jumps_set = nullptr;
-            }
-            if (lurapro::prevd_jumps) {
-                  prevd_jumps->clear();
-                  delete prevd_jumps;
-                  prevd_jumps = nullptr;
-            }
-            if (translation::block_graveyard) {
-                  translation::block_graveyard->clear();
-                  delete translation::block_graveyard;
-                  translation::block_graveyard = nullptr;
-            }
-            if (lurapro::real_pc) {
-                  delete lurapro::real_pc;
-                  lurapro::real_pc = nullptr;
-            }
-            if (lurapro::tbmutex) {
-                  delete lurapro::tbmutex;
-                  lurapro::tbmutex = nullptr;
+            {
+                  if (prevd_jumps_set) {
+                        prevd_jumps_set->clear();
+                        delete prevd_jumps_set;
+                        prevd_jumps_set = nullptr;
+                  }
+                  if (lurapro::prevd_jumps) {
+                        prevd_jumps->clear();
+                        delete prevd_jumps;
+                        prevd_jumps = nullptr;
+                  }
+                  if (lurapro::real_pc) {
+                        delete lurapro::real_pc;
+                        lurapro::real_pc = nullptr;
+                  }
+                  if (lurapro::tbmutex) {
+                        delete lurapro::tbmutex;
+                        lurapro::tbmutex = nullptr;
+                  }
             }
             return;
       }
@@ -217,7 +253,6 @@ inline std::size_t disassemble(const lurapro::capstone_handles::handle &handle, 
       if (inst.inst.bytes.empty()) {
             return 0u;
       }
-
       const auto *tmp_ptr = inst.inst.bytes.data();
       std::size_t ts = inst.inst.bytes.size();
       std::uint64_t ta = inst.inst.pc;
@@ -265,6 +300,11 @@ static void __cdecl vcpu_x86_mem_write_cb(unsigned int vcpu_index, qemu_plugin_m
 /* Discontinuity callback */
 static void __cdecl vcpu_discon_cb(qemu_plugin_id_t id, unsigned int vcpu_index, enum qemu_plugin_discon_type type, uint64_t from_pc, uint64_t to_pc) {
 
+#ifdef QEMU_PLUGIN_DELAY_CBS
+      if (!lurapro::start_cbs.load(std::memory_order_relaxed)) {
+            return;
+      }
+#endif
       auto t = luramas::blocks::interrupts::type::EXCEPTION;
       switch (type) {
             case qemu_plugin_discon_type::QEMU_PLUGIN_DISCON_HOSTCALL: {
@@ -297,12 +337,12 @@ static void __cdecl first_inst_exec_cb(unsigned vcpu_index, void *userdata) {
       /* Once it excutes mark the inst as valid */
       const auto b = reinterpret_cast<lurapro::block *>(userdata);
       auto &inst = b->insts.front();
-      const auto valid = inst.valid.exchange(true);
       auto &prev = (*lurapro::curr_pc)[vcpu_index];
-      if (!valid) {
+      if (!inst.valid) [[unlikely]] {
+            inst.valid = true;
             inst.inst.vcpu = vcpu_index;
             inst.inst.real_pc = get_real_address(vcpu_index);
-      } else if (prev != inst.inst.prev_real_pc) {
+      } else if (prev != inst.inst.prev_real_pc) [[unlikely]] {
             /* Previous instruction came from somewhere else */
             (*lurapro::prevd_jumps)[vcpu_index].emplace_back(lurapro::edge(inst.inst.real_pc, prev));
       }
@@ -313,10 +353,10 @@ static void __cdecl first_inst_exec_cb(unsigned vcpu_index, void *userdata) {
 static void __cdecl inst_exec_cb(unsigned vcpu_index, void *userdata) {
 
       /* Once it excutes mark the inst as valid */
-      const auto inst = reinterpret_cast<lurapro::inst *>(userdata);
-      const auto valid = inst->valid.exchange(true);
+      const auto &inst = reinterpret_cast<lurapro::inst *>(userdata);
       auto &prev = (*lurapro::curr_pc)[vcpu_index];
-      if (!valid) {
+      if (!inst->valid) [[unlikely]] {
+            inst->valid = true;
             inst->inst.vcpu = vcpu_index;
             inst->inst.real_pc = get_real_address(vcpu_index);
       }
@@ -329,12 +369,20 @@ static void __cdecl inst_exec_cb(unsigned vcpu_index, void *userdata) {
 static void __cdecl tb_exec_cb(unsigned vcpu_index, void *userdata) {
 
       auto &djmps = (*lurapro::prevd_jumps)[vcpu_index];
+      if (djmps.empty()) [[likely]] {
+            return;
+      }
       auto &jset = (*lurapro::prevd_jumps_set)[vcpu_index];
-      jset.insert(djmps.begin(), djmps.end());
+      jset.insert(std::make_move_iterator(djmps.begin()), std::make_move_iterator(djmps.end()));
       djmps.clear();
       if (jset.size() > config::MAX_BUFFER_EDGES_SET) {
-            luramas::blocks::edges::save(jset, (*lurapro::save::save_jmp_locs)[vcpu_index]);
+
+            auto nodes_to_save = std::move(jset);
             jset.clear();
+            boost::asio::post(*lurapro::save::pool, [to_save = std::move(nodes_to_save), vcpu_index]() mutable {
+                  std::lock_guard<std::mutex> lock(lurapro::save::io_mutex);
+                  luramas::blocks::edges::save(to_save, (*lurapro::save::save_jmp_locs)[vcpu_index]);
+            });
       }
       return;
 }
@@ -342,6 +390,11 @@ static void __cdecl tb_exec_cb(unsigned vcpu_index, void *userdata) {
 /* Translate per block CB */
 static void __cdecl tb_trans_cb(qemu_plugin_id_t id, qemu_plugin_tb *tb) {
 
+#ifdef QEMU_PLUGIN_DELAY_CBS
+      if (!lurapro::start_cbs.load(std::memory_order_relaxed)) {
+            return;
+      }
+#endif
       const auto instc = qemu_plugin_tb_n_insns(lurapro::mod)(tb);
       if (!instc) {
             return;
@@ -383,7 +436,7 @@ static void __cdecl tb_trans_cb(qemu_plugin_id_t id, qemu_plugin_tb *tb) {
                   /* Memwrites */
                   switch (config::arch) {
                         case luramas::blocks::arch::x86: {
-                              qemu_plugin_register_vcpu_mem_cb(lurapro::mod)(insn, vcpu_x86_mem_write_cb, qemu_plugin_cb_flags::QEMU_PLUGIN_CB_NO_REGS, qemu_plugin_mem_rw::QEMU_PLUGIN_MEM_W, NULL);
+                              qemu_plugin_register_vcpu_mem_cb(lurapro::mod)(insn, vcpu_x86_mem_write_cb, QEMU_PLUGIN_CB_NO_REGS, QEMU_PLUGIN_MEM_W, reinterpret_cast<void *>(&b->insts[i]));
                               break;
                         }
                         default: {
@@ -521,6 +574,10 @@ static void __cdecl vcpu_init_cb(qemu_plugin_id_t id, std::uint32_t vcpu_index) 
 /* On vcpu exit CB save instruction data */
 static void __cdecl at_exit_cb(qemu_plugin_id_t id, void *userdata) {
 
+      if (lurapro::save::pool) {
+            lurapro::save::pool->join();
+      }
+      std::lock_guard<std::mutex> io_lock(lurapro::save::io_mutex);
       for (const auto &[_, b] : *lurapro::translation::blocks) {
             b->write(*lurapro::save::save);
       }
@@ -543,6 +600,11 @@ static void __cdecl at_exit_cb(qemu_plugin_id_t id, void *userdata) {
 /* Flushes graveyard */
 static void __cdecl vcpu_tb_flush_cb(qemu_plugin_id_t id) {
 
+#ifdef QEMU_PLUGIN_DELAY_CBS
+      if (!lurapro::start_cbs.load(std::memory_order_relaxed)) {
+            return;
+      }
+#endif
       std::unique_lock<std::shared_mutex> lock(*lurapro::tbmutex);
       if (lurapro::translation::block_graveyard) {
             for (const auto &i : *lurapro::translation::block_graveyard) {
@@ -550,12 +612,29 @@ static void __cdecl vcpu_tb_flush_cb(qemu_plugin_id_t id) {
             }
             lurapro::translation::block_graveyard->clear();
       }
+      if (lurapro::interrupts::ints) {
+            for (auto &i : *lurapro::interrupts::ints) {
+                  luramas::blocks::interrupts::write(*lurapro::save::save, i);
+                  i.clear();
+            }
+      }
+      if (lurapro::vcpu::vcpu_states) {
+            for (auto &i : *lurapro::vcpu::vcpu_states) {
+                  luramas::blocks::vcpu::write(*lurapro::save::save, i);
+                  i.clear();
+            }
+      }
       return;
 }
 
 /* Called when VCPU idles (used for determining cpu kick edges) */
 static void __cdecl vcpu_idle_cb(qemu_plugin_id_t id, std::uint32_t vcpu_index) {
 
+#ifdef QEMU_PLUGIN_DELAY_CBS
+      if (!lurapro::start_cbs.load(std::memory_order_relaxed)) {
+            return;
+      }
+#endif
       auto &vec = (*lurapro::vcpu::vcpu_states)[vcpu_index];
       if (vec.size() >= vec.capacity()) {
             vec.reserve(!vec.capacity() ? 1024u : vec.capacity() * 2u); /* Grow *2 */
@@ -567,6 +646,11 @@ static void __cdecl vcpu_idle_cb(qemu_plugin_id_t id, std::uint32_t vcpu_index) 
 /* Called when VCPU resumes (used for determining cpu kick edges) */
 static void __cdecl vcpu_resume_cb(qemu_plugin_id_t id, std::uint32_t vcpu_index) {
 
+#ifdef QEMU_PLUGIN_DELAY_CBS
+      if (!lurapro::start_cbs.load(std::memory_order_relaxed)) {
+            return;
+      }
+#endif
       auto &vec = (*lurapro::vcpu::vcpu_states)[vcpu_index];
       if (vec.size() >= vec.capacity()) {
             vec.reserve(!vec.capacity() ? 1024u : vec.capacity() * 2u); /* Grow *2 */
@@ -575,17 +659,44 @@ static void __cdecl vcpu_resume_cb(qemu_plugin_id_t id, std::uint32_t vcpu_index
       return;
 }
 
+#ifdef QEMU_PLUGIN_DELAY_CBS
+/* Listen for command to enable expensive Cbs */
+void cmd_listener() {
+
+      std::string input("");
+      std::printf("Enter 'x' to enable expensive Cbs\n");
+      do {
+            std::cin >> input;
+            if (input == "x") {
+                  std::printf("Enabled Cbs\n");
+                  lurapro::start_cbs.store(true);
+                  break;
+            }
+      } while (true);
+      return;
+}
+#endif
+
 /* Main plugin install */
 extern "C" QEMU_PLUGIN_EXPORT std::int32_t __cdecl qemu_plugin_install(qemu_plugin_id_t id, const qemu_info_t *info, int argc, char **argv) {
 
       lurapro::init();
+#ifdef _WIN32
       lurapro::mod = LoadLibraryA("qemu-system-x86_64.exe");
-      qemu_plugin_register_vcpu_tb_trans_cb(lurapro::mod)(id, tb_trans_cb);
+#endif
       qemu_plugin_register_vcpu_init_cb(lurapro::mod)(id, vcpu_init_cb);
       qemu_plugin_register_atexit_cb(lurapro::mod)(id, at_exit_cb, NULL);
-      qemu_plugin_register_flush_cb(lurapro::mod)(id, vcpu_tb_flush_cb);
-      qemu_plugin_register_vcpu_idle_cb(lurapro::mod)(id, vcpu_idle_cb);
-      qemu_plugin_register_vcpu_resume_cb(lurapro::mod)(id, vcpu_resume_cb);
-      qemu_plugin_register_vcpu_discon_cb(lurapro::mod)(id, qemu_plugin_discon_type::QEMU_PLUGIN_DISCON_ALL, vcpu_discon_cb);
+
+      /* Can optionaly start being executed later */
+      {
+#ifdef QEMU_PLUGIN_DELAY_CBS
+            std::thread(cmd_listener).detach();
+#endif
+            qemu_plugin_register_vcpu_tb_trans_cb(lurapro::mod)(id, tb_trans_cb);
+            qemu_plugin_register_flush_cb(lurapro::mod)(id, vcpu_tb_flush_cb);
+            qemu_plugin_register_vcpu_idle_cb(lurapro::mod)(id, vcpu_idle_cb);
+            qemu_plugin_register_vcpu_resume_cb(lurapro::mod)(id, vcpu_resume_cb);
+            qemu_plugin_register_vcpu_discon_cb(lurapro::mod)(id, qemu_plugin_discon_type::QEMU_PLUGIN_DISCON_ALL, vcpu_discon_cb);
+      }
       return 0;
 }
