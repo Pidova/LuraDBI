@@ -13,13 +13,15 @@ namespace luramas::basic_info {
       template <std::uint8_t MAX_LEN>
       struct inst {
 
-            address pc = 0u;           /* Virtual pc */
-            address real_pc = 0u;      /* Logical pc */
-            address prev_real_pc = 0u; /* Previous logical PC */
-            std::uint8_t vcpu = 0u;    /* Virtual CPU it got executed on */
+            bool fvalid_prev_real_pc = true; /* Is prev_real_pc valid? */
+            address pc = 0u;                 /* Virtual pc */
+            address real_pc = 0u;            /* Logical pc */
+            address prev_real_pc = 0u;       /* Previous logical PC */
+            std::uint8_t vcpu = 0u;          /* Virtual CPU it got executed on */
             inst_bytes<MAX_LEN> bytes;
 
             inline void write(std::ofstream &ofs) const {
+                  ofs.write(reinterpret_cast<const char *>(&this->fvalid_prev_real_pc), sizeof(this->fvalid_prev_real_pc));
                   ofs.write(reinterpret_cast<const char *>(&this->pc), sizeof(this->pc));
                   ofs.write(reinterpret_cast<const char *>(&this->real_pc), sizeof(this->real_pc));
                   ofs.write(reinterpret_cast<const char *>(&this->prev_real_pc), sizeof(this->prev_real_pc));
@@ -32,6 +34,7 @@ namespace luramas::basic_info {
                   return;
             }
             inline void read(std::ifstream &ifs) {
+                  ifs.read(reinterpret_cast<char *>(&this->fvalid_prev_real_pc), sizeof(this->fvalid_prev_real_pc));
                   ifs.read(reinterpret_cast<char *>(&this->pc), sizeof(this->pc));
                   ifs.read(reinterpret_cast<char *>(&this->real_pc), sizeof(this->real_pc));
                   ifs.read(reinterpret_cast<char *>(&this->prev_real_pc), sizeof(this->prev_real_pc));

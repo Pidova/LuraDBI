@@ -13,7 +13,8 @@ namespace luramas::blocks {
             block,       /* Block */
             edge_map,    /* Edges */
             vcpu_states, /* VCPU states */
-            interrupts   /* Interrupt data */
+            interrupts,  /* Interrupt data */
+            MMIO         /* MMIO data */
       };
       enum class arch : std::uint8_t {
             none, /* No arch */
@@ -48,9 +49,31 @@ namespace luramas::blocks {
                   }
             }
       }
+
+      namespace str {
+
+            namespace data {
+
+                  constexpr std::array<const char *const, 6u> save_types = {
+                      "none",
+                      "block",
+                      "edge_map",
+                      "vcpu_states",
+                      "interrupts",
+                      "MMIO"};
+            } // namespace data
+            constexpr inline const char *const to_string(const save_type &type) noexcept {
+                  if (const auto index = static_cast<std::size_t>(type); index < data::save_types.size()) {
+                        return data::save_types[index];
+                  }
+                  return "unknown";
+            }
+      } // namespace str
+
       namespace fs {
 
-            inline save_type get_save_type(std::ifstream &ifs, const bool reset = false) {
+            /* Gets serialized saved type */
+            inline save_type get_save_type(std::ifstream &ifs, const bool reset = false /* Resets IFS position ie func wont change IFS position */) {
                   if (!ifs.is_open()) {
                         return save_type::none;
                   }
@@ -64,26 +87,36 @@ namespace luramas::blocks {
             }
 
       } // namespace fs
+
       namespace edges {
 
+            /* 
+                Edge map data (NOT FINAL, UNSAFE EDGES), because of potential context switching this serves as more unsafe edges but gives context.
+                This gives previous Real PC of any instruction where the previous real PC set before this was executed is different. THIS IS NOT FINAL!!!
+                Edges should also be analyzed through disassembly, interrupts, etc.
+            */
             struct jmp_loc {
+
+                  flag fvalid = true;                        /* Valid or no? */
                   luramas::profile::address dst_realpc = 0u; /* Dest real PC */
                   luramas::profile::address src_realpc = 0u; /* Real PC source */
 
                   bool operator==(const jmp_loc &o) const noexcept {
-                        return this->dst_realpc == o.dst_realpc && this->src_realpc == o.src_realpc;
+                        return this->dst_realpc == o.dst_realpc && this->src_realpc == o.src_realpc && this->fvalid == o.fvalid;
                   }
             };
             struct jmp_loc_hash {
                   std::size_t operator()(const jmp_loc &j) const noexcept {
                         std::size_t seed = j.src_realpc;
                         boost::hash_combine(seed, j.dst_realpc);
+                        boost::hash_combine(seed, j.fvalid);
                         return seed;
                   }
             };
 
 #pragma pack(push, 1)
             struct packed_jmp_loc {
+                  flag fvalid;
                   luramas::profile::address dst_realpc;
                   luramas::profile::address src_realpc;
             };
@@ -102,7 +135,7 @@ namespace luramas::blocks {
                   std::vector<packed_jmp_loc> staging_buf;
                   staging_buf.reserve(vector_size);
                   for (const auto &i : src) {
-                        staging_buf.push_back({i.dst_realpc, i.src_realpc});
+                        staging_buf.push_back({i.fvalid, i.dst_realpc, i.src_realpc});
                   }
 
                   const auto uncompressed_size = static_cast<std::int32_t>(staging_buf.size() * sizeof(packed_jmp_loc));
@@ -129,7 +162,7 @@ namespace luramas::blocks {
                   std::size_t vector_size = 0u;
                   ifs.read(reinterpret_cast<char *>(&vector_size), sizeof(vector_size));
                   if (!vector_size) {
-                        return false;
+                        return true;
                   }
 
                   std::int32_t compressed_size = 0;
@@ -149,7 +182,7 @@ namespace luramas::blocks {
 
                   dest.reserve(dest.size() + vector_size);
                   for (const auto &packed : staging_buf) {
-                        dest.insert({packed.dst_realpc, packed.src_realpc});
+                        dest.insert({packed.fvalid, packed.dst_realpc, packed.src_realpc});
                   }
                   return true;
             }
@@ -188,9 +221,10 @@ namespace luramas::blocks {
                         return false;
                   }
                   std::size_t size = 0u;
+                  const auto vsize = v.size();
                   ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
-                  v.resize(size);
-                  for (auto i = 0u; i < size; ++i) {
+                  v.resize(vsize + size);
+                  for (auto i = vsize; i < size + vsize; ++i) {
                         read(ifs, v[i]);
                   }
                   return true;
@@ -227,18 +261,22 @@ namespace luramas::blocks {
                   RESUME
             };
             struct captured_block_state {
-                  state k = state::PAUSED;   /* State put in */
-                  std::uint8_t vcpu = 0u;    /* Related VCPU */
-                  std::size_t block_id = 0u; /* Current Block ID */
+                  flag fhas_recent_realpc = false;              /* Real pc exists? */
+                  state k = state::PAUSED;                      /* State put in */
+                  std::uint8_t vcpu = 0u;                       /* Related VCPU */
+                  luramas::profile::address recent_realpc = 0u; /* Most recent real PC of VCPU */
+                  std::size_t curr_global_block_id = 0u;        /* Current global block ID to map to the instruction where it came from  */
             };
             /* Read/Write functions */
             inline void read(std::ifstream &ifs, captured_block_state &s) {
+                  ifs.read(reinterpret_cast<char *>(&s.fhas_recent_realpc), sizeof(s.fhas_recent_realpc));
                   ifs.read(reinterpret_cast<char *>(&s.k), sizeof(s.k));
                   ifs.read(reinterpret_cast<char *>(&s.vcpu), sizeof(s.vcpu));
-                  ifs.read(reinterpret_cast<char *>(&s.block_id), sizeof(s.block_id));
+                  ifs.read(reinterpret_cast<char *>(&s.recent_realpc), sizeof(s.recent_realpc));
+                  ifs.read(reinterpret_cast<char *>(&s.curr_global_block_id), sizeof(s.curr_global_block_id));
                   return;
             }
-            inline bool read(std::ifstream &ifs, boost::container::vector<captured_block_state> &s) {
+            inline bool read(std::ifstream &ifs, boost::container::vector<captured_block_state> &v) {
 
                   if (!ifs.is_open()) {
                         return false;
@@ -249,17 +287,20 @@ namespace luramas::blocks {
                         return false;
                   }
                   std::size_t size = 0u;
+                  const auto vsize = v.size();
                   ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
-                  s.resize(size);
-                  for (auto i = 0u; i < size; ++i) {
-                        read(ifs, s[i]);
+                  v.resize(vsize + size);
+                  for (auto i = vsize; i < size + vsize; ++i) {
+                        read(ifs, v[i]);
                   }
                   return true;
             }
             inline void write(std::ofstream &ofs, const captured_block_state &s) {
+                  ofs.write(reinterpret_cast<const char *>(&s.fhas_recent_realpc), sizeof(s.fhas_recent_realpc));
                   ofs.write(reinterpret_cast<const char *>(&s.k), sizeof(s.k));
                   ofs.write(reinterpret_cast<const char *>(&s.vcpu), sizeof(s.vcpu));
-                  ofs.write(reinterpret_cast<const char *>(&s.block_id), sizeof(s.block_id));
+                  ofs.write(reinterpret_cast<const char *>(&s.recent_realpc), sizeof(s.recent_realpc));
+                  ofs.write(reinterpret_cast<const char *>(&s.curr_global_block_id), sizeof(s.curr_global_block_id));
                   return;
             }
             inline void write(std::ofstream &ofs, const boost::container::vector<captured_block_state> &s) {
@@ -278,19 +319,90 @@ namespace luramas::blocks {
             }
       } // namespace vcpu
 
+      namespace mmio {
+
+            enum class rw : std::uint8_t {
+                  read, /* Read MMIO  */
+                  write /* Write to MMIO */
+            };
+            struct data {
+
+                  luramas::profile::address dest = 0u;       /* Destination address */
+                  luramas::profile::address src_realpc = 0u; /* Real PC inst of source inst */
+
+                  bool operator==(const data &o) const noexcept {
+                        return this->dest == o.dest && this->src_realpc == o.src_realpc;
+                  }
+            };
+            struct hash {
+                  std::size_t operator()(const data &j) const noexcept {
+                        std::size_t seed = j.dest;
+                        boost::hash_combine(seed, j.src_realpc);
+                        return seed;
+                  }
+            };
+
+            /* Read/Writes */
+            inline void read(std::ifstream &ifs, data &d) {
+                  ifs.read(reinterpret_cast<char *>(&d.dest), sizeof(d.dest));
+                  ifs.read(reinterpret_cast<char *>(&d.src_realpc), sizeof(d.src_realpc));
+                  return;
+            }
+            inline bool read(std::ifstream &ifs, boost::container::vector<data> &v) {
+
+                  if (!ifs.is_open()) {
+                        return false;
+                  }
+                  if (const auto pos = ifs.tellg(); fs::get_save_type(ifs) != save_type::MMIO) {
+                        ifs.seekg(pos);
+                        return false;
+                  }
+                  std::size_t size = 0u;
+                  const auto vsize = v.size();
+                  ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
+                  v.resize(size + vsize);
+                  for (auto i = vsize; i < size + vsize; ++i) {
+                        read(ifs, v[i]);
+                  }
+                  return true;
+            }
+            inline void write(std::ofstream &ofs, const data &d) {
+                  ofs.write(reinterpret_cast<const char *>(&d.dest), sizeof(d.dest));
+                  ofs.write(reinterpret_cast<const char *>(&d.src_realpc), sizeof(d.src_realpc));
+                  return;
+            }
+            inline void write(std::ofstream &ofs, const boost::container::vector<data> &v) {
+
+                  if (!ofs.is_open() || v.empty()) {
+                        return;
+                  }
+                  const auto type = save_type::MMIO;
+                  ofs.write(reinterpret_cast<const char *>(&type), sizeof(type));
+                  const std::size_t size = v.size();
+                  ofs.write(reinterpret_cast<const char *>(&size), sizeof(size));
+                  for (auto i = 0u; i < size; ++i) {
+                        write(ofs, v[i]);
+                  }
+                  return;
+            }
+      } // namespace mmio
+
       template <std::uint8_t MAX_LEN>
       struct inst_data {
 
             flag_storage flags = 0u;                 /* Flags to disassemble with inst_data_flags */
+            flag fvalid = false;                     /* See if instruction has been executed? */
             luramas::basic_info::inst<MAX_LEN> inst; /* Instruction data */
-            flag valid = false;                      /* See if instruction has been executed? */
+#ifdef QEMU_PLUGIN_DEBUG
+            char DEBUG_DISM[120u]; /* Debug disassembly */
+#endif
       };
 
       template <std::uint8_t MAX_LEN>
       struct block {
 
             time_t time = NULL;                                                /* Time Block was translated */
-            std::size_t id = 0u;                                               /* Block ID relative to other blocs */
+            std::size_t id = 0u;                                               /* Block ID relative to other blocks */
             flag fretranslated = false;                                        /* Has block been retranslated? */
             boost::container::vector<inst_data<MAX_LEN>> insts;                /* Instruction data translated on tb exec */
             luramas::profile::address loc = 0u;                                /* Start virtual pc  */
@@ -329,7 +441,7 @@ namespace luramas::blocks {
                   for (auto i = 0u; i < vector_size; ++i) {
                         auto &entry = this->insts[i];
                         ifs.read(reinterpret_cast<char *>(&entry.flags), sizeof(entry.flags));
-                        ifs.read(reinterpret_cast<char *>(&entry.valid), sizeof(entry.valid));
+                        ifs.read(reinterpret_cast<char *>(&entry.fvalid), sizeof(entry.fvalid));
                         entry.inst.read(ifs);
                   }
                   return true;
@@ -351,7 +463,7 @@ namespace luramas::blocks {
                   ofs.write(reinterpret_cast<const char *>(&vector_size), sizeof(vector_size));
                   for (const auto &i : this->insts) {
                         ofs.write(reinterpret_cast<const char *>(&i.flags), sizeof(i.flags));
-                        ofs.write(reinterpret_cast<const char *>(&i.valid), sizeof(i.valid));
+                        ofs.write(reinterpret_cast<const char *>(&i.fvalid), sizeof(i.fvalid));
                         i.inst.write(ofs);
                   }
                   return;
