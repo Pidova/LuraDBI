@@ -131,7 +131,7 @@ set CONAN_BUILD_CONFIG="$(Configuration)_$(Platform)" &amp;&amp; "$(ProjectDir).
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;QEMU_PLUGIN_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -163,6 +163,11 @@ set CONAN_BUILD_CONFIG="$(Configuration)_$(Platform)" &amp;&amp; "$(ProjectDir).
     <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\common.hpp" />
+    <ClInclude Include="src\headers\defs.hpp" />
+    <ClInclude Include="src\archs\X86.hpp" />
+    <ClInclude Include="src\headers\helpers.hpp" />
+    <ClInclude Include="src\headers\process.hpp" />
     <ClInclude Include="UPDATEME.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -14,7 +14,8 @@ namespace luramas::blocks {
             edge_map,    /* Edges */
             vcpu_states, /* VCPU states */
             interrupts,  /* Interrupt data */
-            MMIO         /* MMIO data */
+            MMIO,        /* MMIO data */
+            reg_data     /* Register data */
       };
       enum class arch : std::uint8_t {
             none, /* No arch */
@@ -90,6 +91,10 @@ namespace luramas::blocks {
 
       namespace edges {
 
+            enum class kind : std::uint8_t {
+                  next,   /* From */
+                  signal, /* Instruction */
+            };
             /* 
                 Edge map data (NOT FINAL, UNSAFE EDGES), because of potential context switching this serves as more unsafe edges but gives context.
                 This gives previous Real PC of any instruction where the previous real PC set before this was executed is different. THIS IS NOT FINAL!!!

@@ -324,7 +324,7 @@ std::int32_t main() {
       }
 
       /* Load data */
-      for (const auto &entry : std::filesystem::directory_iterator(config::directory)) {
+      for (const auto &entry : std::filesystem::directory_iterator(config::SAVE_DIRECTORY)) {
 
             if (!entry.is_regular_file()) {
                   continue;

@@ -1,12 +1,9 @@
-/*
-	QEMU register ID
-*/
 #pragma once
 #include <cstdint>
 
 namespace QEMU::regs {
 
-      enum class X86 : std::uint8_t {
+      enum class x86 : std::uint8_t {
             rax = 0,
             rbx = 1,
             rcx = 2,

@@ -23,7 +23,22 @@
     <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\headers\defs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="UPDATEME.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\archs\X86.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\helpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\headers\process.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

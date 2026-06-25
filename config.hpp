@@ -11,24 +11,33 @@ namespace config {
 	  /* Maximum length per instruction */
       static constexpr auto MAX_LEN = 15u;
 	  
+	  /* Maximum register data */
+	  static constexpr auto MAX_REG_DATA = sizeof(std::uint64_t) * 4u;
+
 	  /* Directory to save edge and block data */
-      static constexpr auto directory = "C:\\qemudumps\\blocks\\";
+      static constexpr auto SAVE_DIRECTORY = "C:\\qemudumps\\blocks\\";
 	  
 	  /* Save name of misc data */
-      static constexpr auto mainsave_name = "save";
+      static constexpr auto SAVEMAIN_NAME = "save";
 	  
 	  /* Save name of edge data */
-      static constexpr auto savelocs_name = "edges_";
+      static constexpr auto SAVELOCS_NAME = "edges_";
 
 	  /* Save name of MMIO data */
-	  static constexpr auto savemmio_name = "mmio_";
+	  static constexpr auto SAVEMMIO_NAME = "mmio_";
 	  
+	  /* Save name of reg data */
+	  static constexpr auto SAVEREG_NAME = "reg_";
+
 	  /* Extension */
-      static constexpr auto extension = ".lurablks";
+      static constexpr auto SAVE_EXTENSION = ".lurablks";
 	  
 	  /* Default interpretation mode */
-      static constexpr auto default_mode = luramas::blocks::interpretation_mode::x64;
+      static constexpr auto DEFAULT_MODE = luramas::blocks::interpretation_mode::x64;
 	  
 	   /* Target architecture */
-      static constexpr auto arch = luramas::blocks::arch::x86;
+      static constexpr auto ARCH = luramas::blocks::arch::x86;
+
+	  /* Maximum Possible emulating cores */
+	  static constexpr auto MAX_CORES = 128u;
 } // namespace config
