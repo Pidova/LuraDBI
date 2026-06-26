@@ -10,7 +10,7 @@ VISTA:
 
 qemu-system-x86_64.exe ^
 -cpu qemu64 ^
--smp 8 ^
+-smp 16 ^
 -m 16G ^
 -accel tcg,thread=multi,tb-size=4096 ^
 -boot d ^
@@ -147,9 +147,9 @@ namespace cbs {
                   if (lurapro::interrupts::ints->size() <= vcpu_index) {
                         lurapro::interrupts::ints->resize(vcpu_index + 1u);
                   }
-                  if (lurapro::pending_edges->size() <= vcpu_index) {
-                        lurapro::pending_edges->resize(vcpu_index + 1u);
-                        (*lurapro::pending_edges)[vcpu_index] = std::nullopt;
+                  if (lurapro::signaled_edges->size() <= vcpu_index) {
+                        lurapro::signaled_edges->resize(vcpu_index + 1u);
+                        (*lurapro::signaled_edges)[vcpu_index] = std::nullopt;
                   }
                   if (lurapro::prevd_jumps_set->size() <= vcpu_index) {
                         lurapro::prevd_jumps_set->resize(vcpu_index + 1u);
@@ -238,14 +238,16 @@ namespace cbs {
                               break;
                         }
                   }
+
 #ifdef QEMU_PLUGIN_DEBUG
                   std::printf("INT [%d](%d) %llu -> %llu\n", static_cast<const std::uint8_t>(t), vcpu_index, from_pc, to_pc);
 #endif
+                  lurapro::interrupts::fadd_real_pc = true;
                   auto &vec = (*lurapro::interrupts::ints)[vcpu_index];
                   if (vec.size() >= vec.capacity()) {
                         vec.reserve(!vec.capacity() ? 1024u : vec.capacity() * 2u); /* Grow *2 */
                   }
-                  vec.emplace_back(luramas::blocks::interrupts::interrupt(t, to_pc, from_pc, lurapro::translation::global_block_id, vcpu_index));
+                  vec.emplace_back(luramas::blocks::interrupts::interrupt(t, to_pc, from_pc, 0u, lurapro::translation::global_block_id, vcpu_index));
                   return;
             }
 
@@ -331,14 +333,19 @@ namespace cbs {
             static void __cdecl exec(std::uint32_t vcpu_index, void *userdata) {
 
                   auto &djmps = (*lurapro::prevd_jumps)[vcpu_index];
-                  if (const auto &pe = (*lurapro::pending_edges)[vcpu_index]; pe) {
+                  const auto b = reinterpret_cast<lurapro::block *>(userdata);
 
-                        std::uint64_t addr_buf = 0u;
-                        if (const auto b = reinterpret_cast<lurapro::block *>(userdata); lurapro::qemu_w<qemu_plugin_translate_vaddr>(b->loc, &addr_buf) && pe->target_pc == addr_buf) {
+                  /* Signaled edges */
+                  if (auto &pe = (*lurapro::signaled_edges)[vcpu_index]; pe) [[unlikely]] {
 
-                              djmps.emplace_back(lurapro::edge(b->loc, pe->from));
+                        if (std::uint64_t addr_buf = 0u; lurapro::qemu_w<qemu_plugin_translate_vaddr>(b->loc, &addr_buf) && pe->target_pc == addr_buf) {
+
+                              djmps.emplace_back(lurapro::edge(luramas::blocks::edges::kind::signaled, b->loc, pe->from));
                         }
+                        pe = std::nullopt;
                   }
+
+                  /* Edges set */
                   if (djmps.empty()) [[likely]] {
                         return;
                   }

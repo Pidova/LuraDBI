@@ -23,12 +23,12 @@ namespace x86 {
 
             /* Adds edges to pending edges */
             inline void add_edge(const std::uint32_t vcpu_index, const std::uint64_t from_realpc, const std::uint64_t target_physical_address) {
-                  (*lurapro::pending_edges)[vcpu_index] = lurapro::pending_edge(from_realpc, target_physical_address);
+                  (*lurapro::signaled_edges)[vcpu_index] = lurapro::signaled_edge(from_realpc, target_physical_address);
                   return;
             }
 
             /* CB for memstorage for detecting MMIO */
-            void access(const std::uint32_t vcpu_index, const std::uint64_t vaddr, const std::uint64_t realpc) {
+            inline void access(const std::uint32_t vcpu_index, const std::uint64_t vaddr, const std::uint64_t realpc) {
 
                   if (vaddr >= lurapro::mmio::base && vaddr < (lurapro::mmio::base + lurapro::mmio::size)) [[unlikely]] {
 
@@ -36,7 +36,7 @@ namespace x86 {
                               case APIC_ID_REG_WRITE: {
 
                                     std::uint32_t incoming_reg_value = 0u;
-                                    GByteArray *buf = g_byte_array_sized_new(sizeof(incoming_reg_value));
+                                    auto buf = g_byte_array_sized_new(sizeof(incoming_reg_value));
                                     if (lurapro::qemu_w<qemu_plugin_read_memory_vaddr>(vaddr, buf, sizeof(incoming_reg_value))) {
 
                                           map_id[std::uint8_t((incoming_reg_value >> 24) & 0xFF)] = vcpu_index;
@@ -47,7 +47,7 @@ namespace x86 {
                               case ICR_HIGH: {
 
                                     std::uint32_t icr_high = 0u;
-                                    GByteArray *buf = g_byte_array_sized_new(sizeof(icr_high));
+                                    auto buf = g_byte_array_sized_new(sizeof(icr_high));
                                     if (lurapro::qemu_w<qemu_plugin_read_memory_vaddr>(vaddr, buf, sizeof(icr_high))) {
 
                                           if (std::memcpy(&icr_high, buf->data, sizeof(icr_high)); vcpu_index < 256) {
@@ -60,7 +60,7 @@ namespace x86 {
                               case ICR_LOW: {
 
                                     std::uint32_t icr_low = 0u;
-                                    GByteArray *mem_read_buf = g_byte_array_sized_new(sizeof(icr_low));
+                                    auto mem_read_buf = g_byte_array_sized_new(sizeof(icr_low));
                                     if (lurapro::qemu_w<qemu_plugin_read_memory_vaddr>(vaddr, mem_read_buf, sizeof(icr_low))) {
 
                                           if (std::memcpy(&icr_low, mem_read_buf->data, sizeof(icr_low)); ((icr_low >> 8) & 0x7) == 0x6) { /* Delivery mode */
@@ -71,7 +71,7 @@ namespace x86 {
                                                 switch ((icr_low >> 18) & 0x3) {
                                                       case 0x3: { /* All excluding self */
 
-                                                            for (auto idx = 0u; idx < lurapro::pending_edges->size(); ++idx) {
+                                                            for (auto idx = 0u; idx < lurapro::signaled_edges->size(); ++idx) {
                                                                   if (idx == vcpu_index) {
                                                                         continue;
                                                                   }
@@ -81,7 +81,7 @@ namespace x86 {
                                                       }
                                                       case 0x2: { /* All including self */
 
-                                                            for (auto idx = 0u; idx < lurapro::pending_edges->size(); ++idx) {
+                                                            for (auto idx = 0u; idx < lurapro::signaled_edges->size(); ++idx) {
                                                                   add_edge(idx, realpc, target_address);
                                                             }
                                                             break;
@@ -97,7 +97,7 @@ namespace x86 {
                                                                   if (map_id[idx] != raw) {
                                                                         continue;
                                                                   }
-                                                                  target_vcpu = static_cast<std::uint32_t>(idx);
+                                                                  target_vcpu = idx;
                                                                   break;
                                                             }
                                                             break;

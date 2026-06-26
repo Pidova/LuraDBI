@@ -13,9 +13,11 @@
 #include <fstream>
 #include <ranges>
 
-using block = boost::shared_ptr<luramas::blocks::block<config::MAX_LEN>>;                                                    /* Block PTR */
-using edge_map = boost::unordered_flat_map<luramas::profile::address, boost::unordered_flat_set<luramas::profile::address>>; /* Real PC -> { Real PC Edges } */
-using cap_map = boost::unordered_flat_map<luramas::blocks::interpretation_mode, std::pair<csh, cs_insn *>>;                  /* Capstone map Interp mode -> { CS DATA } */
+using block = boost::shared_ptr<luramas::blocks::block<config::MAX_LEN>>;                                                                                          /* Block PTR */
+using edge_map = boost::unordered_flat_map<luramas::profile::address, boost::unordered_flat_set<luramas::blocks::edges::edge, luramas::blocks::edges::edge_hash>>; /* Real PC -> { Real PC Edges } */
+using cap_map = boost::unordered_flat_map<luramas::blocks::interpretation_mode, std::pair<csh, cs_insn *>>;                                                        /* Capstone map Interp mode -> { CS DATA } */
+using edge_map_kind = boost::unordered_flat_map<luramas::blocks::edges::jmp_loc, luramas::blocks::edges::kind, luramas::blocks::edges::jmp_loc_hash>;              /* JMP Loc edge -> kind */
+
 struct save_data {
       boost::unordered_flat_set<luramas::blocks::edges::jmp_loc, luramas::blocks::edges::jmp_loc_hash> edge_map; /* Edge Map */
       boost::unordered_flat_map<luramas::profile::address, block> block_map;                                     /* Block/node map */
@@ -36,10 +38,33 @@ namespace analysis {
             edge_map successors;  /* Src -> Dest */
             edge_map predecessor; /* Dest -> Src */
 
+            /* Reserve amount */
+            inline void reserve(const std::size_t n) {
+                  this->successors.reserve(n);
+                  this->predecessor.reserve(n);
+                  return;
+            }
+
             /* Emits edge */
+            template <luramas::blocks::edges::kind k>
             inline void emit(const luramas::profile::address dest_real_pc, const luramas::profile::address src_real_pc) {
-                  this->successors[src_real_pc].insert(dest_real_pc);
-                  this->predecessor[dest_real_pc].insert(src_real_pc);
+
+                  /* Successors */
+                  {
+                        auto &succs = this->successors[src_real_pc];
+                        luramas::blocks::edges::edge e;
+                        e.dst_realpc = dest_real_pc;
+                        auto [it, inserted] = succs.insert(e);
+                        const_cast<luramas::blocks::edges::edge &>(*it).kinds[std::uint8_t(k)] = true;
+                  }
+                  /* Predecessors */
+                  {
+                        auto &succs = this->predecessor[dest_real_pc];
+                        luramas::blocks::edges::edge e;
+                        e.dst_realpc = src_real_pc;
+                        auto [it, inserted] = succs.insert(e);
+                        const_cast<luramas::blocks::edges::edge &>(*it).kinds[std::uint8_t(k)] = true;
+                  }
                   return;
             }
 
@@ -64,41 +89,47 @@ namespace analysis {
         * Discontinuities based on the insts located at the curr block time of execution
         * Prev addr -> Curr address
       */
-      inline void analyze(edges_data &buffer, const save_data &data, compiled_data &cd, cap_map &capmap) {
+      inline void analyze(edges_data &buffer, const save_data &data, compiled_data &cd) {
 
-            boost::unordered_flat_map<luramas::profile::address, luramas::blocks::inst_data<config::MAX_LEN> *> data_map;
+            boost::unordered_flat_set<luramas::profile::address> vaddr_pending;                               /* Pending Vaddr detected with Interrupts to get real PCs */
+            boost::unordered_flat_map<luramas::profile::address, luramas::profile::address> vaddr_to_real_pc; /* Vaddr to real PC map */
+            vaddr_to_real_pc.reserve(cd.sorted_blocks_global_id.size() * 5u);
+            buffer.reserve(cd.sorted_blocks_global_id.size() * 3u);
 
-            /* VCPUs */
-            std::size_t vcpus_idx = 0u;
-            boost::container::vector<luramas::blocks::vcpu::state> vcpu_states;
-            vcpu_states.resize(cd.sorted_blocks_global_id.front()->vcpu_n);
-
-            /* Interrupts */
+            /* Interrupts edges*/
             std::size_t ints_idx = 0u;
 
+            /* Edge Map */
+            for (const auto &edge : data.edge_map) {
+                  buffer.emit<luramas::blocks::edges::kind::next>(edge.dst_realpc, edge.src_realpc);
+            }
             for (auto &b : cd.sorted_blocks_global_id) {
 
-                  /* Set current insts (SMCs get handled by QEMU which a new block would have been created down the road) */
+                  std::optional<luramas::profile::address> prev_real = std::nullopt;
                   const auto bglobal_id = b->id;
                   for (auto &i : b->insts) {
                         if (!i.fvalid) {
                               continue;
                         }
-                        data_map[i.inst.pc] = &i;
-                        buffer.emit(i.inst.real_pc, i.inst.prev_real_pc);
+                        if (prev_real && *prev_real == i.inst.prev_real_pc) {
+                              prev_real = i.inst.real_pc;
+                              continue;
+                        }
+                        prev_real = i.inst.real_pc;
+                        vaddr_to_real_pc[i.inst.pc] = i.inst.real_pc;
+                        buffer.emit<luramas::blocks::edges::kind::next>(i.inst.real_pc, i.inst.prev_real_pc);
                   }
 
-                  /* VCPUs */
-                  if (vcpus_idx < data.block_states.size()) {
+                  /* Add pending */
+                  if (!vaddr_pending.empty()) {
+                        for (auto it = vaddr_pending.begin(); it != vaddr_pending.end();) {
+                              if (auto lookup = vaddr_to_real_pc.find(*it); lookup != vaddr_to_real_pc.end()) {
 
-                        auto bs = data.block_states[vcpus_idx];
-                        std::cout << " intr.curr_global_block_id " << bs.curr_global_block_id << " " << bglobal_id << std::endl;
-                        while (bs.curr_global_block_id <= bglobal_id) {
-                              vcpu_states[bs.vcpu] = bs.k;
-                              if (++vcpus_idx >= data.block_states.size()) {
-                                    break;
+                                    buffer.emit<luramas::blocks::edges::kind::signaled>(lookup->second, lookup->second);
+                                    it = vaddr_pending.erase(it);
+                              } else {
+                                    ++it;
                               }
-                              bs = data.block_states[vcpus_idx];
                         }
                   }
 
@@ -107,11 +138,16 @@ namespace analysis {
 
                         auto intr = data.interrupts[ints_idx];
                         while (intr.curr_global_block_id <= bglobal_id) {
-                              buffer.emit(data_map[intr.dst]->inst.real_pc, data_map[intr.src]->inst.real_pc);
+
+                              if (const auto it = vaddr_to_real_pc.find(intr.src); it != vaddr_to_real_pc.end()) {
+                                    buffer.emit<luramas::blocks::edges::kind::signaled>(intr.dst_real, vaddr_to_real_pc[intr.src]);
+                              } else {
+                                    vaddr_pending.insert(intr.src);
+                              }
                               if (++ints_idx >= data.interrupts.size()) {
                                     break;
                               }
-                              intr = data.interrupts[++ints_idx];
+                              intr = data.interrupts[ints_idx];
                         }
                   }
             }
@@ -143,6 +179,10 @@ namespace analysis {
             return;
       }
 } // namespace analysis
+
+namespace graph {
+
+}
 
 /* Export graphviz to file while using nodes as label strings. */
 //void export_graphviz(const Graph &g, const std::string &file, const std::unordered_map<luramas::profile::address, std::string> &nodes) {
@@ -259,7 +299,7 @@ void init_flags(const analysis::edges_data &edges, const save_data &data, compil
                   const auto &binst = b->insts.back();
                   for (const auto &rdest : it->second) {
 
-                        const auto bit = data.block_map.find(rdest);
+                        const auto bit = data.block_map.find(rdest.dst_realpc);
                         if (bit == data.block_map.end() || bit->second->insts.empty()) {
                               continue;
                         }
@@ -334,6 +374,7 @@ std::int32_t main() {
                   std::cerr << "Failed: " << entry.path() << "\n";
                   continue;
             }
+            std::printf("On file %s\n", entry.path().string().c_str());
             while (file.good()) {
 
                   const auto k = luramas::blocks::fs::get_save_type(file, true);
@@ -373,7 +414,7 @@ std::int32_t main() {
       }
 
       analysis::analyze(cd, data);                /* Compiled data */
-      analysis::analyze(edges, data, cd, capmap); /* Analyze edges */
+      analysis::analyze(edges, data, cd); /* Analyze edges */
 
       /* Init flags and merge blocks */
       init_flags(edges, data, cd, capmap);
@@ -417,7 +458,7 @@ std::int32_t main() {
 
                                     for (const auto &dest : it->second) {
 
-                                          const auto bit = data.block_map.find(dest);
+                                          const auto bit = data.block_map.find(dest.dst_realpc);
                                           if (bit == data.block_map.end() || bit->second->insts.empty()) {
                                                 continue;
                                           }
@@ -506,13 +547,13 @@ std::int32_t main() {
                         /* Add each edge to the stack */
                         for (const auto &dest : edgmapit->second) {
 
-                              addr_stack.emplace_back(dest);
-                              const auto &bbit = data.block_map.find(dest);
+                              addr_stack.emplace_back(dest.dst_realpc);
+                              const auto &bbit = data.block_map.find(dest.dst_realpc);
                               if (bbit == data.block_map.end()) {
                                     continue;
                               }
                               if (!next_addr && binst.inst.pc + binst.inst.bytes.size() == bbit->second->loc) {
-                                    next_addr = dest;
+                                    next_addr = dest.dst_realpc;
                               }
                         }
 

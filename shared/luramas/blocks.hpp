@@ -91,10 +91,28 @@ namespace luramas::blocks {
 
       namespace edges {
 
+            /* What kind of edge happened */
             enum class kind : std::uint8_t {
-                  next,   /* From */
-                  signal, /* Instruction */
+                  signaled, /* Instruction signaled to execute this */
+                  next,     /* Captured from instruction execution, jumped or fell to it */
+                  count,    /* Count of kinds */
             };
+
+            struct edge {
+
+                  luramas::profile::address dst_realpc = 0u;                   /* Dest real PC */
+                  std::array<bool, std::uint8_t(kind::count)> kinds = {false}; /* Valid or no? */
+
+                  bool operator==(const edge &o) const noexcept {
+                        return this->dst_realpc == o.dst_realpc;
+                  }
+            };
+            struct edge_hash {
+                  std::size_t operator()(const edge &j) const noexcept {
+                        return j.dst_realpc;
+                  }
+            };
+
             /* 
                 Edge map data (NOT FINAL, UNSAFE EDGES), because of potential context switching this serves as more unsafe edges but gives context.
                 This gives previous Real PC of any instruction where the previous real PC set before this was executed is different. THIS IS NOT FINAL!!!
@@ -102,26 +120,26 @@ namespace luramas::blocks {
             */
             struct jmp_loc {
 
-                  flag fvalid = true;                        /* Valid or no? */
+                  kind k = kind::next;                       /* Kind */
                   luramas::profile::address dst_realpc = 0u; /* Dest real PC */
                   luramas::profile::address src_realpc = 0u; /* Real PC source */
 
                   bool operator==(const jmp_loc &o) const noexcept {
-                        return this->dst_realpc == o.dst_realpc && this->src_realpc == o.src_realpc && this->fvalid == o.fvalid;
+                        return this->dst_realpc == o.dst_realpc && this->src_realpc == o.src_realpc && this->k == o.k;
                   }
             };
             struct jmp_loc_hash {
                   std::size_t operator()(const jmp_loc &j) const noexcept {
                         std::size_t seed = j.src_realpc;
                         boost::hash_combine(seed, j.dst_realpc);
-                        boost::hash_combine(seed, j.fvalid);
+                        boost::hash_combine(seed, std::uint8_t(j.k));
                         return seed;
                   }
             };
 
 #pragma pack(push, 1)
             struct packed_jmp_loc {
-                  flag fvalid;
+                  kind k;
                   luramas::profile::address dst_realpc;
                   luramas::profile::address src_realpc;
             };
@@ -140,7 +158,7 @@ namespace luramas::blocks {
                   std::vector<packed_jmp_loc> staging_buf;
                   staging_buf.reserve(vector_size);
                   for (const auto &i : src) {
-                        staging_buf.push_back({i.fvalid, i.dst_realpc, i.src_realpc});
+                        staging_buf.push_back({i.k, i.dst_realpc, i.src_realpc});
                   }
 
                   const auto uncompressed_size = static_cast<std::int32_t>(staging_buf.size() * sizeof(packed_jmp_loc));
@@ -187,7 +205,7 @@ namespace luramas::blocks {
 
                   dest.reserve(dest.size() + vector_size);
                   for (const auto &packed : staging_buf) {
-                        dest.insert({packed.fvalid, packed.dst_realpc, packed.src_realpc});
+                        dest.insert({packed.k, packed.dst_realpc, packed.src_realpc});
                   }
                   return true;
             }
@@ -201,17 +219,19 @@ namespace luramas::blocks {
                   ETC        /* Misc interupt */
             };
             struct interrupt {
-                  type k = type::EXCEPTION;              /* Type of interrupt */
-                  luramas::profile::address dst = 0u;    /* Destination Vaddr PC */
-                  luramas::profile::address src = 0u;    /* Source Vaddr PC */
-                  std::size_t curr_global_block_id = 0u; /* Current global block ID to map to the instruction where it came from  */
-                  std::uint8_t vcpu = 0u;                /* VCPU */
+                  type k = type::EXCEPTION;                /* Type of interrupt */
+                  luramas::profile::address dst = 0u;      /* Destination Vaddr PC */
+                  luramas::profile::address src = 0u;      /* Source Vaddr PC */
+                  luramas::profile::address dst_real = 0u; /* Destination real PC */
+                  std::size_t curr_global_block_id = 0u;   /* Current global block ID to map to the instruction where it came from  */
+                  std::uint8_t vcpu = 0u;                  /* VCPU */
             };
             /* Read/Write functions */
             inline void read(std::ifstream &ifs, interrupt &in) {
                   ifs.read(reinterpret_cast<char *>(&in.k), sizeof(in.k));
                   ifs.read(reinterpret_cast<char *>(&in.dst), sizeof(in.dst));
                   ifs.read(reinterpret_cast<char *>(&in.src), sizeof(in.src));
+                  ifs.read(reinterpret_cast<char *>(&in.dst_real), sizeof(in.dst_real));
                   ifs.read(reinterpret_cast<char *>(&in.curr_global_block_id), sizeof(in.curr_global_block_id));
                   ifs.read(reinterpret_cast<char *>(&in.vcpu), sizeof(in.vcpu));
                   return;
@@ -238,6 +258,7 @@ namespace luramas::blocks {
                   ofs.write(reinterpret_cast<const char *>(&in.k), sizeof(in.k));
                   ofs.write(reinterpret_cast<const char *>(&in.dst), sizeof(in.dst));
                   ofs.write(reinterpret_cast<const char *>(&in.src), sizeof(in.src));
+                  ofs.write(reinterpret_cast<const char *>(&in.dst_real), sizeof(in.dst_real));
                   ofs.write(reinterpret_cast<const char *>(&in.curr_global_block_id), sizeof(in.curr_global_block_id));
                   ofs.write(reinterpret_cast<const char *>(&in.vcpu), sizeof(in.vcpu));
                   return;

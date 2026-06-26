@@ -40,11 +40,11 @@ namespace lurapro {
       vcpu_vec<boost::fixed_vector<edge, config::MAX_BUFFER_N>> *prevd_jumps = nullptr; /* Given next instruction if prev inst is set and diff logs it here */
       vcpu_vec<boost::unordered_flat_set<edge, edge_hash>> *prevd_jumps_set = nullptr;  /* Jmp locs */
 
-      struct pending_edge {
+      struct signaled_edge {
             luramas::profile::address from = 0u;      /* From real PC */
             luramas::profile::address target_pc = 0u; /* Target Physical Address Note. Some archs only give physical address and Vaddr can be translated to a physical address */
       };
-      vcpu_vec<std::optional<pending_edge>> *pending_edges = nullptr;
+      vcpu_vec<std::optional<signaled_edge>> *signaled_edges = nullptr;
 #ifdef QEMU_PLUGIN_DELAY_CBS
       std::atomic<bool> start_cbs{false}; /* Start CBs at a later time */
 #endif
@@ -81,8 +81,13 @@ namespace lurapro {
 
       namespace interrupts {
 
+            /* 
+               When an intterupt gets added its source real PC is unkown so when TBs execute it checks the last one 
+               If same as source adds it from there, Dest PC can be determined with block globals, SMC is always handeled natively by QEMU.
+            */
+            thread_local bool fadd_real_pc = false;
             vcpu_vec<boost::container::vector<luramas::blocks::interrupts::interrupt>> *ints = nullptr; /* Interrupts */
-      }
+      } // namespace interrupts
 
       namespace mmio {
 
@@ -136,8 +141,8 @@ namespace lurapro {
                   if (!lurapro::prevd_jumps_set) {
                         lurapro::prevd_jumps_set = new vcpu_vec<boost::unordered_flat_set<edge, edge_hash>>();
                   }
-                  if (!lurapro::pending_edges) {
-                        lurapro::pending_edges = new vcpu_vec<std::optional<pending_edge>>();
+                  if (!lurapro::signaled_edges) {
+                        lurapro::signaled_edges = new vcpu_vec<std::optional<signaled_edge>>();
                   }
             }
             {
@@ -243,10 +248,10 @@ namespace lurapro {
                         delete prevd_jumps_set;
                         prevd_jumps_set = nullptr;
                   }
-                  if (pending_edges) {
-                        pending_edges->clear();
-                        delete pending_edges;
-                        pending_edges = nullptr;
+                  if (signaled_edges) {
+                        signaled_edges->clear();
+                        delete signaled_edges;
+                        signaled_edges = nullptr;
                   }
                   if (prevd_jumps) {
                         prevd_jumps->clear();
